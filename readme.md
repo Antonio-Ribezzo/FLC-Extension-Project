@@ -9,6 +9,5 @@
     - JavaScript
     - Firefox extension architecture
 
-## Passo 1
-
-## Passo 2
+## Ricorda
+Controllare i tag da analizzare nella criterio di successo 1.1.1 (visto solo image)
