@@ -5,7 +5,7 @@ function evaluateNonTextContent() {
 
     // Selezioniamo tutti gli elementi non testuali
     nonTextElements.push(...document.querySelectorAll('img, input[type="image"], area, object, embed, svg'));
-
+    
     // Valutiamo ciascun elemento
     nonTextElements.forEach(element => {
         if (element.tagName.toLowerCase() === 'img') {
@@ -51,6 +51,94 @@ function evaluateNonTextContent() {
     return successRate >= 90;
 }
 
+// Funzione per verificare il criterio di successo 1.3.1 Info and Relationships
+function evaluateInfoAndRelationships(){
+    let isVerified = true;
+    // Verifica delle intestazioni
+    const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6'); //sarà una node list
+    headings.forEach(heading => {
+        if(!heading.textContent.trim()){
+            isVerified = false;
+        }
+    })
+
+    // Verifica delle Etichette dei Moduli
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        const label = document.querySelector(`label[for="${input.id}"]`);
+        // Se tutte queste condizioni sono vere, significa che l’elemento di input non ha alcuna etichetta o descrizione accessibile
+        // quindi la variabile isVerified viene impostata su false.
+        if (!label && !input.hasAttribute('aria-label') && !input.hasAttribute('aria-labelledby')) {
+            isVerified = false;
+        }
+    });
+
+    // Verifica delle Tabelle
+    const tables = document.querySelectorAll('table');
+    tables.forEach(table => {
+        const thElements = table.querySelectorAll('th');
+        thElements.forEach(th => {
+            if (!th.hasAttribute('scope') && !th.hasAttribute('id')) {
+                isVerified = false;
+            }
+        });
+
+        const tdElements = table.querySelectorAll('td');
+        tdElements.forEach(td => {
+            if (td.hasAttribute('headers')) {
+                //otteniamo l'elenco degli ID delle celle di intestazione associati
+                const headerIds = td.getAttribute('headers').split(' ');
+                // verifico che ogni ID corrisponda ad un elemento esistente
+                headerIds.forEach(headerId => {
+                    if (!document.getElementById(headerId)) {
+                        isVerified = false;
+                    }
+                });
+            }
+        });
+    });
+
+    // Verifica degli Elenchi
+    const lists = document.querySelectorAll('ul, ol, dl');
+    lists.forEach(list => {
+        if (!list.querySelectorAll('li, dt, dd').length) {
+            isVerified = false;
+        }
+    });
+
+    // Verifico dell'uso degli attributi ARIA
+    const ariaElements = document.querySelectorAll('[aria-labelledby], [aria-describedby]');
+    ariaElements.forEach(element => {
+        // otteniamo il valore dell'attributo aria-labelledby dell'elemento corrente
+        const ariaLabelledby = element.getAttribute('aria-labelledby');
+        if (ariaLabelledby) {
+            // Suddivido il valore dell’attributo aria-labelledby in un array di ID, utilizzando lo spazio come delimitatore.
+            const labelledbyIds = ariaLabelledby.split(' ');
+            // Itero su ciascun ID e verifico se esiste un elemento con quell’ID nel documento. 
+            // Se un ID non corrisponde ad un elemento esistente, imposta isVerified a false.
+            labelledbyIds.forEach(id => {
+                if (!document.getElementById(id)) {
+                    isVerified = false;
+                }
+            });
+        }
+
+        const ariaDescribedby = element.getAttribute('aria-describedby');
+        if (ariaDescribedby) {
+            const describedbyIds = ariaDescribedby.split(' ');
+            describedbyIds.forEach(id => {
+                if (!document.getElementById(id)) {
+                    isVerified = false;
+                }
+            });
+        }
+    });
+
+    return isVerified
+}
+
+
+
 
 // Funzione per generare il JSON finale
 function generateAccessibilityReport() {
@@ -62,7 +150,7 @@ function generateAccessibilityReport() {
                 },
                 "1.3 Adaptable": {
                     // Aggiungi qui le funzioni di valutazione per gli altri criteri
-                    "1.3.1 Info and Relationships": "",
+                    "1.3.1 Info and Relationships": evaluateInfoAndRelationships() ? "verified" : "not verified",
                     "1.3.2 Meaningful Sequence": "",
                     "1.3.4 Orientation": "",
                     "1.3.5 Identify Input Purpose": "",
@@ -115,6 +203,7 @@ browser.runtime.onMessage.addListener(function(message) {
     if (message.command === "analyze") {
         const accessibilityReport = generateAccessibilityReport();
         console.log(accessibilityReport);
+        // console.log(evaluateInfoAndRelationships());
         // Invia il rapporto al popup per la visualizzazione
         browser.runtime.sendMessage({ report: accessibilityReport });
     }
