@@ -4,7 +4,7 @@ function evaluateNonTextContent() {
     let passedChecks = 0;
 
     // Selezioniamo tutti gli elementi non testuali
-    nonTextElements.push(...document.querySelectorAll('img, area, input[type="image"], object, embed, applet'));
+    nonTextElements.push(...document.querySelectorAll('img, input[type="image"], area, object, embed, svg'));
 
     // Valutiamo ciascun elemento
     nonTextElements.forEach(element => {
@@ -17,12 +17,16 @@ function evaluateNonTextContent() {
                 passedChecks++;
             }
         } else if (element.tagName.toLowerCase() === 'input' && element.type === 'image') {
-            if (element.hasAttribute('alt') && element.getAttribute('alt').trim() !== "") {
+            if ((element.hasAttribute('alt') && element.getAttribute('alt').trim() !== "") || 
+                (element.hasAttribute('title') && element.getAttribute('title').trim() !== "") ||
+                (element.hasAttribute('aria-label') && element.getAttribute('aria-label').trim() !== "") || 
+                (element.hasAttribute('aria-labelledby') && element.getAttribute('aria-labelledby').trim() !== "")) {
                 passedChecks++;
             }
         } else if (element.tagName.toLowerCase() === 'object') {
             if ((element.hasAttribute('title') && element.getAttribute('title').trim() !== "") ||
-                (element.hasAttribute('aria-label') && element.getAttribute('aria-label').trim() !== "")) {
+                (element.hasAttribute('aria-label') && element.getAttribute('aria-label').trim() !== "") ||
+                (element.hasAttribute('aria-labelledby') && element.getAttribute('aria-labelledby').trim() !== "")){
                 passedChecks++;
             }
         } else if (element.tagName.toLowerCase() === 'embed') {
@@ -30,16 +34,21 @@ function evaluateNonTextContent() {
                 (element.hasAttribute('aria-label') && element.getAttribute('aria-label').trim() !== "")) {
                 passedChecks++;
             }
-        } else if (element.tagName.toLowerCase() === 'applet') {
-            if (element.hasAttribute('alt') && element.getAttribute('alt').trim() !== "") {
+        }else if (element.tagName.toLowerCase() === 'svg' && element.hasAttribute('role') && element.getAttribute('role').trim() !== "") {
+            if (
+                (element.hasAttribute('aria-label') && element.getAttribute('aria-label').trim() !== "") ||
+                (element.hasAttribute('aria-labelledby') && element.getAttribute('aria-labelledby').trim() !== "") ||
+                (element.hasAttribute('title') && element.getAttribute('title').trim() !== "")
+            ) {
                 passedChecks++;
             }
-        }
+        }   
     });
 
     // Calcolare la percentuale di successo
     const successRate = (passedChecks / nonTextElements.length) * 100;
-    return successRate >= 100;
+    // Può essere true o false
+    return successRate >= 90;
 }
 
 

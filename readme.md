@@ -10,4 +10,3 @@
     - Firefox extension architecture
 
 ## Ricorda
-Controllare i tag da analizzare nella criterio di successo 1.1.1 (visto solo image)
