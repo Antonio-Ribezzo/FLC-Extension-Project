@@ -151,7 +151,7 @@ function evaluateMeaningfulSequence(){
         const  elementType= element.tagName.toLowerCase();
 
         if (!isOrderMeaningful(previousElementType, elementType)) {
-            // console.log(element);
+            console.log("DEBUG Criteria 1.3.2 \n\tIl primo tag trovato è: " + previousElementType + "\n\tIl secondo tag trovato è: " + elementType + "\n\tL'ordine deve essere il seguente: header, nav, main, section, article, footer.")
             isVerified = false;
         }
 
@@ -160,6 +160,7 @@ function evaluateMeaningfulSequence(){
         // il metodo .includes controlla se elementType è incluso in questo array.
         if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(elementType)) {
             if (!isHeadingOrderMeaningful(element)) {
+                console.log("DEBUG Criteria 1.3.2 \n\tL'ordine dei titoli non è rispettato \n\tL'ordine deve essere il seguente: h1, h2, h3, h4, h5, h6")
                 isVerified = false;
             }
         }
@@ -215,10 +216,11 @@ function isHeadingOrderMeaningful(heading) {
             continue;
         }
 
-        // Verifica che non ci sia un salto di più di un livello
-        if (level > lastLevel + 1) {
-            // console.log(h, lastLevel, container);
+        // Verifico che i titoli siano disposti in maniera incrementale
+        if (level < lastLevel ){
             return false;
+        }else if(level >= lastLevel){
+            continue;
         }
 
         // Aggiorna lastLevel con il livello corrente
