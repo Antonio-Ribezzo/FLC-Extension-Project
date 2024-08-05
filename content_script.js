@@ -4,10 +4,10 @@ function evaluateNonTextContent() {
     const nonTextElements = [];
     let passedChecks = 0;
 
-    // Selezioniamo tutti gli elementi non testuali
+    // Seleziono tutti gli elementi non testuali
     nonTextElements.push(...document.querySelectorAll('img, input[type="image"], area, object, embed, svg'));
     
-    // Valutiamo ciascun elemento
+    // Valuto ciascun elemento
     nonTextElements.forEach(element => {
         if (element.tagName.toLowerCase() === 'img') {
             if (element.hasAttribute('alt') && element.getAttribute('alt').trim() !== "") {
@@ -46,7 +46,7 @@ function evaluateNonTextContent() {
         }   
     });
 
-    // Calcolare la percentuale di successo
+    // Calcolo la percentuale di successo
     const successRate = (passedChecks / nonTextElements.length) * 100;
     // Può essere true o false
     return successRate >= 90;
@@ -111,7 +111,7 @@ function evaluateInfoAndRelationships(){
     // Verifica dell'uso degli attributi ARIA
     const ariaElements = document.querySelectorAll('[aria-labelledby], [aria-describedby]');
     ariaElements.forEach(element => {
-        // otteniamo il valore dell'attributo aria-labelledby dell'elemento corrente
+        // ottengo il valore dell'attributo aria-labelledby dell'elemento corrente
         const ariaLabelledby = element.getAttribute('aria-labelledby');
         if (ariaLabelledby) {
             // Suddivido il valore dell’attributo aria-labelledby in un array di ID, utilizzando lo spazio come delimitatore.
@@ -155,7 +155,7 @@ function evaluateMeaningfulSequence(){
             isVerified = false;
         }
 
-        // Gestisci le intestazioni separatamente
+        // Gestisco le intestazioni separatamente
         // Questa condizione verifica esplicitamente se il tipo di elemento è uno tra h1, h2, h3, h4, h5, h6.
         // il metodo .includes controlla se elementType è incluso in questo array.
         if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(elementType)) {
@@ -196,14 +196,14 @@ function isHeadingOrderMeaningful(heading) {
         return current;
     }
 
-    // Ottieni il contenitore significativo dell'heading corrente
+    // Ottengo il contenitore significativo dell'heading corrente
     const container = findSignificantContainer(heading);
     if (!container) return true; // Se non viene trovato un contenitore significativo, considera l'ordine valido
 
-    // Seleziona tutte le intestazioni nel contenitore
+    // Seleziono tutte le intestazioni nel contenitore
     const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
     
-    // Inizializza la variabile per tracciare il livello dell'ultima intestazione
+    // Inizializzo la variabile per tracciare il livello dell'ultima intestazione
     let lastLevel = 0; // Inizializziamo lastLevel a 0 per gestire il primo heading
 
     // Iterazione su ciascuna intestazione nel contenitore
@@ -223,13 +223,34 @@ function isHeadingOrderMeaningful(heading) {
             continue;
         }
 
-        // Aggiorna lastLevel con il livello corrente
+        // Aggiorno lastLevel con il livello corrente
         lastLevel = level;
         // console.log(h, lastLevel, container);
     }
 
     // Se tutte le intestazioni sono in ordine sequenziale, restituisci true
     return true;
+}
+
+
+// 1.3.4 //
+// Funzione per verificare il criterio di successo 1.3.4 Orientation
+function evaluateOrientation() {
+    let isVerified = true;
+
+    // Verifico l'orientamento corrente del dispositivo
+    const initialOrientation = window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+    // Definisco le media query per portrait e landscape
+    const portraitQuery = window.matchMedia("(orientation: portrait)");
+    const landscapeQuery = window.matchMedia("(orientation: landscape)");
+
+    // Verifica se la media query per l'orientamento corrente è matches
+    if ((initialOrientation === 'portrait' && !portraitQuery.matches) || (initialOrientation === 'landscape' && !landscapeQuery.matches)) {
+        console.log("DEBUG Criteria 1.3.4 \n\t Esistono media query che bloccano l'orientamento")
+        isVerified = false;
+    }
+
+    return isVerified;
 }
 
 
@@ -245,7 +266,7 @@ function generateAccessibilityReport() {
                     // Aggiungi qui le funzioni di valutazione per gli altri criteri
                     "1.3.1 Info and Relationships": evaluateInfoAndRelationships() ? "verified" : "not verified",
                     "1.3.2 Meaningful Sequence": evaluateMeaningfulSequence() ? "verified" : "not verified",
-                    "1.3.4 Orientation": "",
+                    "1.3.4 Orientation": evaluateOrientation() ? "verified" : "not verified",
                     "1.3.5 Identify Input Purpose": "",
                     "1.3.6 Identify Purpose": ""
                 },
@@ -254,7 +275,7 @@ function generateAccessibilityReport() {
                     "1.4.2 Audio Control": "",
                     "1.4.3 Contrast (Minimum)": "",
                     "1.4.6 Contrast (Enhanced)": "",
-                    "1.4.10 Reflow": "verified",
+                    "1.4.10 Reflow": "",
                     "1.4.11 Non-text Contrast": "",
                     "1.4.12 Text Spacing": "",
                     "1.4.13 Content on Hover or Focus": ""
@@ -295,7 +316,8 @@ function generateAccessibilityReport() {
 browser.runtime.onMessage.addListener(function(message) {
     if (message.command === "analyze") {
         const accessibilityReport = generateAccessibilityReport();
-        console.log(accessibilityReport);
+        evaluateOrientation();
+        // console.log(accessibilityReport);
         // console.log(evaluateInfoAndRelationships());
         // Invia il rapporto al popup per la visualizzazione
         browser.runtime.sendMessage({ report: accessibilityReport });
