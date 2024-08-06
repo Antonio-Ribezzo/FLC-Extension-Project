@@ -238,17 +238,35 @@ function isHeadingOrderMeaningful(heading) {
 function evaluateOrientation() {
     let isVerified = true;
 
-    // Verifico l'orientamento corrente del dispositivo
+    // Verifico l'orientamento corrente del dispositivo utilizzando le proprietà delle media query
     const initialOrientation = window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+    // console.log(initialOrientation);
     // Definisco le media query per portrait e landscape
     const portraitQuery = window.matchMedia("(orientation: portrait)");
+    // console.log("Portrait query: " + portraitQuery.media + ", Matches: " + portraitQuery.matches)
     const landscapeQuery = window.matchMedia("(orientation: landscape)");
+    // console.log("Landscape query: " + landscapeQuery.media + ", Matches: " + landscapeQuery.matches)
 
     // Verifica se la media query per l'orientamento corrente è matches
     if ((initialOrientation === 'portrait' && !portraitQuery.matches) || (initialOrientation === 'landscape' && !landscapeQuery.matches)) {
         console.log("DEBUG Criteria 1.3.4 \n\t Esistono media query che bloccano l'orientamento")
         isVerified = false;
     }
+
+    // Ispeziona tutti gli script nel documento per screen.orientation.lock
+    document.querySelectorAll('script').forEach(script => {
+        let lockDetected = false;
+        if (script.textContent.includes('screen.orientation.lock')) {
+            lockDetected = true;
+            console.log('screen.orientation.lock found in script:', script.textContent);
+        }
+        if (lockDetected) {
+            console.log("DEBUG Criteria 1.3.4: Esistono script che bloccano l'orientamento.");
+            isVerified = false;
+        }
+    });
+
+    
 
     return isVerified;
 }
