@@ -49,7 +49,14 @@ function evaluateNonTextContent() {
     // Calcolo la percentuale di successo
     const successRate = (passedChecks / nonTextElements.length) * 100;
     // Può essere true o false
-    return successRate >= 90;
+    const limit = 90;
+    if(successRate >= limit){
+        console.log("DEBUG Criteria 1.1.1 \n\tAlmeno " +  limit +"% dei contenuti non testuali ha un'alternativa testuale")
+        return true
+    }else{
+        console.log("DEBUG Criteria 1.1.1 \n\tPiù del " +  (100-limit) +"% dei contenuti non testuali non ha un'alternativa testuale")
+        return false
+    }
 }
 
 // 1.3.1 //
@@ -60,6 +67,7 @@ function evaluateInfoAndRelationships(){
     const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6'); //sarà una node list
     headings.forEach(heading => {
         if(!heading.textContent.trim()){
+            console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei titoli (headings) che non hanno contenuto")
             isVerified = false;
         }
     })
@@ -71,6 +79,7 @@ function evaluateInfoAndRelationships(){
         // Se tutte queste condizioni sono vere, significa che l’elemento di input non ha alcuna etichetta o descrizione accessibile
         // quindi la variabile isVerified viene impostata su false.
         if (!label && !input.hasAttribute('aria-label') && !input.hasAttribute('aria-labelledby')) {
+            console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei campi input che non hanno nè un'etichetta (label) nè una attributo aria-labelledby")
             isVerified = false;
         }
     });
@@ -81,6 +90,7 @@ function evaluateInfoAndRelationships(){
         const thElements = table.querySelectorAll('th');
         thElements.forEach(th => {
             if (!th.hasAttribute('scope') && !th.hasAttribute('id')) {
+                console.log("DEBUG Criteria 1.3.1 \n\tEsistono delle tabelle con tag 'th' che sono senza attributo scope e/o attributo id")
                 isVerified = false;
             }
         });
@@ -93,6 +103,7 @@ function evaluateInfoAndRelationships(){
                 // verifico che ogni ID corrisponda ad un elemento esistente
                 headerIds.forEach(headerId => {
                     if (!document.getElementById(headerId)) {
+                        console.log("DEBUG Criteria 1.3.1 \n\tEsistono delle tabelle con tag 'td' che non corrispondono ad alcun elemento")
                         isVerified = false;
                     }
                 });
@@ -104,6 +115,7 @@ function evaluateInfoAndRelationships(){
     const lists = document.querySelectorAll('ul, ol, dl');
     lists.forEach(list => {
         if (!list.querySelectorAll('li, dt, dd').length) {
+            console.log("DEBUG Criteria 1.3.1 \n\tEsistono degli elenchi strutturati in modo errato")
             isVerified = false;
         }
     });
@@ -120,6 +132,7 @@ function evaluateInfoAndRelationships(){
             // Se un ID non corrisponde ad un elemento esistente, imposta isVerified a false.
             labelledbyIds.forEach(id => {
                 if (!document.getElementById(id)) {
+                    console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei tag con attributi aria-labelledby non associati ad alcun elemento")
                     isVerified = false;
                 }
             });
@@ -130,6 +143,7 @@ function evaluateInfoAndRelationships(){
             const describedbyIds = ariaDescribedby.split(' ');
             describedbyIds.forEach(id => {
                 if (!document.getElementById(id)) {
+                    console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei tag con attributi aria-describedby non associati ad alcun elemento")
                     isVerified = false;
                 }
             });
@@ -249,7 +263,7 @@ function evaluateOrientation() {
 
     // Verifica se la media query per l'orientamento corrente è matches
     if ((initialOrientation === 'portrait' && !portraitQuery.matches) || (initialOrientation === 'landscape' && !landscapeQuery.matches)) {
-        console.log("DEBUG Criteria 1.3.4 \n\t Esistono media query che bloccano l'orientamento")
+        console.log("DEBUG Criteria 1.3.4 \n\tEsistono media query che bloccano l'orientamento")
         isVerified = false;
     }
 
@@ -258,18 +272,63 @@ function evaluateOrientation() {
         let lockDetected = false;
         if (script.textContent.includes('screen.orientation.lock')) {
             lockDetected = true;
-            console.log('screen.orientation.lock found in script:', script.textContent);
+            console.log('DEBUG Criteria 1.3.4 \n\tscreen.orientation.lock trovato nello script:', script.textContent);
         }
         if (lockDetected) {
-            console.log("DEBUG Criteria 1.3.4: Esistono script che bloccano l'orientamento.");
+            console.log("DEBUG Criteria 1.3.4 \n\tEsistono script che bloccano l'orientamento.");
             isVerified = false;
         }
     });
 
-    
+    return isVerified;
+}
+
+// 1.3.5 //
+// Funzione per verificare il criterio di successo 1.3.5 Identify Input Purpose
+function evaluateIdentifyInputPurpose() {
+    let isVerified = true;
+    const inputFields = document.querySelectorAll('input, textarea, select');
+
+    inputFields.forEach(input => {
+        const type = input.getAttribute('type');
+        const autocomplete = input.getAttribute('autocomplete');
+        
+        // Check for valid input types and autocomplete attributes
+        const validInputTypes = ['button','checkbox', 'color', 'date', 'datetime-local', 'email', 'file', 'hidden', 'image', 'month', 'number', 'password', 'radio', 'range', 'reset', 'search', 'submit', 'tel', 'text', 'time', 'url', 'week'];
+        const validAutocompletes = [
+            'off', 'on', 'name', 'honorific-prefix', 'given-name', 'additional-name', 
+            'family-name', 'honorific-suffix', 'nickname', 'username', 
+            'new-password', 'current-password', 'organization-title', 
+            'organization', 'street-address', 'address-line1', 
+            'address-line2', 'address-line3', 'address-level4', 
+            'address-level3', 'address-level2', 'address-level1', 
+            'country', 'country-name', 'postal-code', 'cc-name', 
+            'cc-given-name', 'cc-additional-name', 'cc-family-name', 
+            'cc-number', 'cc-exp', 'cc-exp-month', 'cc-exp-year', 
+            'cc-csc', 'cc-type', 'transaction-currency', 
+            'transaction-amount', 'language', 'bday', 'bday-day', 
+            'bday-month', 'bday-year', 'sex', 'tel', 'tel-country-code', 
+            'tel-national', 'tel-area-code', 'tel-local', 'tel-local-prefix', 
+            'tel-local-suffix', 'tel-extension', 'impp', 'url', 'photo'
+        ];
+
+        if (type && !validInputTypes.includes(type)) {
+            isVerified = false;
+            console.log(`DEBUG Criteria 1.3.5 \n\tTrovato un input type non valido: ${type}`);
+        }
+        
+        if (autocomplete && !validAutocompletes.includes(autocomplete)) {
+            isVerified = false;
+            console.log(`DEBUG Criteria 1.3.5 \n\tTrovato un attributo autocomplete non valido: ${autocomplete}`);
+            console.log(`Invalid autocomplete attribute detected: ${autocomplete}`);
+        }
+    });
 
     return isVerified;
 }
+
+// Call the function to test
+evaluateIdentifyInputPurpose();
 
 
 // Funzione per generare il JSON finale
@@ -285,7 +344,7 @@ function generateAccessibilityReport() {
                     "1.3.1 Info and Relationships": evaluateInfoAndRelationships() ? "verified" : "not verified",
                     "1.3.2 Meaningful Sequence": evaluateMeaningfulSequence() ? "verified" : "not verified",
                     "1.3.4 Orientation": evaluateOrientation() ? "verified" : "not verified",
-                    "1.3.5 Identify Input Purpose": "",
+                    "1.3.5 Identify Input Purpose": evaluateIdentifyInputPurpose() ? "verified" : "not verified",
                     "1.3.6 Identify Purpose": ""
                 },
                 "1.4 Distinguishable": {
