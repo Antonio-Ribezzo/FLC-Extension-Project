@@ -327,8 +327,59 @@ function evaluateIdentifyInputPurpose() {
     return isVerified;
 }
 
-// Call the function to test
-evaluateIdentifyInputPurpose();
+
+// 1.3.6 //
+// Funzione per verificare il criterio di successo 1.3.6 Identify Purpose
+function evaluateIdentifyPurpose() {
+    let isVerified = true;
+
+    // Verifico le regioni della pagina
+    const regions = document.querySelectorAll('header, nav, main, footer, section, article');
+    const regionCount = {};
+    // La variabile loggedRegions è un insieme (Set) utilizzato per tenere traccia dei tipi di regioni che sono già stati loggati (registrati) nella console per evitare duplicati.
+    const loggedRegions = new Set();
+
+    // Conto quante volte si presenta ciascun tag nella pagina
+    regions.forEach(region => {
+        const tagName = region.tagName.toLowerCase();
+        if (!regionCount[tagName]) {
+            regionCount[tagName] = 0;
+        }
+        regionCount[tagName]++;
+    });
+
+    // Verifichiamo che ciascuna regione se non è unica ha l'attributo ARIA, oppure l'attributo role
+    regions.forEach(region => {
+        const tagName = region.tagName.toLowerCase();
+        if (regionCount[tagName] > 1 && !loggedRegions.has(tagName)) {
+            if (!region.hasAttribute('role') && !region.hasAttribute('aria-labelledby') && !region.hasAttribute('aria-describedby') && !region.hasAttribute('aria-label')) {
+                console.log(`DEBUG Criteria 1.3.6 \n\tIl tag ${region.tagName.toLowerCase()} è presente più di una volta e non ha attributi ARIA role oppure ARIA labels.`);
+                isVerified = false;
+                loggedRegions.add(tagName);
+            }
+        }
+    });
+
+    // Verifichiamo che gli elementi interattivi abbiano gli attributi ARIA label o ARIA role
+    const interactiveElements = document.querySelectorAll('button, a, [role="button"], [role="link"]');
+    interactiveElements.forEach(element => {
+        if (!element.hasAttribute('aria-label') && !element.hasAttribute('aria-labelledby') && !element.hasAttribute('aria-describedby') && !element.hasAttribute('role')) {
+            console.log(`DEBUG Criteria 1.3.6 \n\tL'elemento interattivo ${element.tagName.toLowerCase()} non ha attributi ARIA role oppure ARIA labels.`);
+            isVerified = false;
+        }
+    });
+
+    // Verifichiamo che le icone e le immagini abbiano gli attributi ARIA label o ARIA role
+    const icons = document.querySelectorAll('svg, img');
+    icons.forEach(icon => {
+        if (!icon.hasAttribute('aria-label') && !icon.hasAttribute('aria-labelledby') && !icon.hasAttribute('aria-describedby') && !icon.hasAttribute('role')) {
+            console.log(`DEBUG Criteria 1.3.6 \n\tL'icona ${icon.tagName.toLowerCase()} non ha attributi ARIA role oppure ARIA labels.`);
+            isVerified = false;
+        }
+    });
+
+    return isVerified;
+}
 
 
 // Funzione per generare il JSON finale
@@ -345,7 +396,7 @@ function generateAccessibilityReport() {
                     "1.3.2 Meaningful Sequence": evaluateMeaningfulSequence() ? "verified" : "not verified",
                     "1.3.4 Orientation": evaluateOrientation() ? "verified" : "not verified",
                     "1.3.5 Identify Input Purpose": evaluateIdentifyInputPurpose() ? "verified" : "not verified",
-                    "1.3.6 Identify Purpose": ""
+                    "1.3.6 Identify Purpose": evaluateIdentifyPurpose() ? "verified" : "not verified"
                 },
                 "1.4 Distinguishable": {
                     // Aggiungi qui le funzioni di valutazione per gli altri criteri
@@ -393,7 +444,8 @@ function generateAccessibilityReport() {
 browser.runtime.onMessage.addListener(function(message) {
     if (message.command === "analyze") {
         const accessibilityReport = generateAccessibilityReport();
-        evaluateOrientation();
+        // evaluateIdentifyPurpose();
+        // evaluateOrientation();
         // console.log(accessibilityReport);
         // console.log(evaluateInfoAndRelationships());
         // Invia il rapporto al popup per la visualizzazione
