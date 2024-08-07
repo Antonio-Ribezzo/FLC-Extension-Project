@@ -5,8 +5,8 @@ function evaluateNonTextContent() {
     let passedChecks = 0;
 
     // Seleziono tutti gli elementi non testuali
-    nonTextElements.push(...document.querySelectorAll('img, input[type="image"], area, object, embed, svg'));
-    
+    nonTextElements.push(...document.querySelectorAll('img, input[type="image"], area, object, embed, svg, audio, video'));
+    // console.log(nonTextElements)
     // Valuto ciascun elemento
     nonTextElements.forEach(element => {
         if (element.tagName.toLowerCase() === 'img') {
@@ -43,19 +43,39 @@ function evaluateNonTextContent() {
             ) {
                 passedChecks++;
             }
-        }   
+        }else if (element.tagName.toLowerCase() === 'audio') {
+            if (
+                (element.hasAttribute('aria-label') && element.getAttribute('aria-label').trim() !== "") ||
+                (element.hasAttribute('aria-labelledby') && element.getAttribute('aria-labelledby').trim() !== "") ||
+                (element.hasAttribute('title') && element.getAttribute('title').trim() !== "")
+            ) {
+                passedChecks++;
+            }
+        }else if (element.tagName.toLowerCase() === 'video') {
+            if (
+                (element.hasAttribute('aria-label') && element.getAttribute('aria-label').trim() !== "") ||
+                (element.hasAttribute('aria-labelledby') && element.getAttribute('aria-labelledby').trim() !== "") ||
+                (element.hasAttribute('title') && element.getAttribute('title').trim() !== "")
+            ) {
+                passedChecks++;
+            }
+        }
     });
 
-    // Calcolo la percentuale di successo
-    const successRate = (passedChecks / nonTextElements.length) * 100;
-    // Può essere true o false
-    const limit = 90;
-    if(successRate >= limit){
-        console.log("DEBUG Criteria 1.1.1 \n\tAlmeno " +  limit +"% dei contenuti non testuali ha un'alternativa testuale")
+    if(nonTextElements.length === 0){
         return true
     }else{
-        console.log("DEBUG Criteria 1.1.1 \n\tPiù del " +  (100-limit) +"% dei contenuti non testuali non ha un'alternativa testuale")
-        return false
+        // Calcolo la percentuale di successo
+        const successRate = (passedChecks / nonTextElements.length) * 100;
+        // Può essere true o false
+        const limit = 90;
+        if(successRate >= limit){
+            console.log("DEBUG Criteria 1.1.1 \n\tAlmeno " +  limit +"% dei contenuti non testuali ha un'alternativa testuale")
+            return true
+        }else{
+            console.log("DEBUG Criteria 1.1.1 \n\tPiù del " +  (100-limit) +"% dei contenuti non testuali non ha un'alternativa testuale")
+            return false
+        }
     }
 }
 
@@ -362,19 +382,77 @@ function evaluateIdentifyPurpose() {
 
     // Verifichiamo che gli elementi interattivi abbiano gli attributi ARIA label o ARIA role
     const interactiveElements = document.querySelectorAll('button, a, [role="button"], [role="link"]');
+    const interactiveElementsCount = {};
+    const loggedInteractiveElements = new Set();
+    // Conto quante volte si presenta ciascun tag nella pagina
     interactiveElements.forEach(element => {
-        if (!element.hasAttribute('aria-label') && !element.hasAttribute('aria-labelledby') && !element.hasAttribute('aria-describedby') && !element.hasAttribute('role')) {
-            console.log(`DEBUG Criteria 1.3.6 \n\tL'elemento interattivo ${element.tagName.toLowerCase()} non ha attributi ARIA role oppure ARIA labels.`);
-            isVerified = false;
+        const tagName = element.tagName.toLowerCase();
+        if (!interactiveElementsCount[tagName]) {
+            interactiveElementsCount[tagName] = 0;
+        }
+        interactiveElementsCount[tagName]++;
+    });
+
+    // Verifico se gli elementi interattivi che non sono unici abbiano gli attributi ARIA
+    interactiveElements.forEach(element => {
+        const tagName = element.tagName.toLowerCase();
+        if (interactiveElementsCount[tagName] > 1 && !loggedInteractiveElements.has(tagName)) {
+            if (!element.hasAttribute('aria-label') && !element.hasAttribute('aria-labelledby') && !element.hasAttribute('aria-describedby') && !element.hasAttribute('role')) {
+                console.log(`DEBUG Criteria 1.3.6 \n\tCi sono elementi interattivi <${element.tagName.toLowerCase()}> che non hanno attributi ARIA role oppure ARIA labels.`);
+                isVerified = false;
+                loggedInteractiveElements.add(tagName);
+            }
         }
     });
 
-    // Verifichiamo che le icone e le immagini abbiano gli attributi ARIA label o ARIA role
+    // Verifica delle icone e delle immagini
     const icons = document.querySelectorAll('svg, img');
+    const iconCount = {};
+    const loggedIcons = new Set();
+
+    // Conto quante volte si presenta ciascun tag nella pagina
     icons.forEach(icon => {
-        if (!icon.hasAttribute('aria-label') && !icon.hasAttribute('aria-labelledby') && !icon.hasAttribute('aria-describedby') && !icon.hasAttribute('role')) {
-            console.log(`DEBUG Criteria 1.3.6 \n\tL'icona ${icon.tagName.toLowerCase()} non ha attributi ARIA role oppure ARIA labels.`);
-            isVerified = false;
+        const tagName = icon.tagName.toLowerCase();
+        if (!iconCount[tagName]) {
+            iconCount[tagName] = 0;
+        }
+        iconCount[tagName]++;
+    });
+
+    // Verifica se le icone e le immagini che non sono uniche abbiano gli attributi ARIA
+    icons.forEach(icon => {
+        const tagName = icon.tagName.toLowerCase();
+        if (iconCount[tagName] > 1 && !loggedIcons.has(tagName)) {
+            if (!icon.hasAttribute('aria-label') && !icon.hasAttribute('aria-labelledby') && !icon.hasAttribute('aria-describedby') && !icon.hasAttribute('role')) {
+                console.log(`DEBUG Criteria 1.3.6 \n\tCi sono icone <${icon.tagName.toLowerCase()}> che non hanno attributi ARIA role oppure ARIA labels.`);
+                isVerified = false;
+                loggedIcons.add(tagName);
+            }
+        }
+    });
+
+    return isVerified;
+}
+
+// 1.4.2 //
+// Funzione per verificare il criterio di successo 1.4.2 Audio Control
+function evaluateAudioControl() {
+    let isVerified = true;
+
+    // Select all audio and video elements
+    const mediaElements = document.querySelectorAll('audio, video');
+    // console.log(mediaElements)
+    // Check for autoplay and controls attributes
+    mediaElements.forEach(element => {
+        if (element.hasAttribute('autoplay')) {
+            const hasControls = element.hasAttribute('controls');
+            const hasPauseStop = element.querySelector('button[aria-label="pause"], button[aria-label="stop"]');
+            const hasVolumeControl = element.querySelector('input[type="range"][aria-label="volume"]');
+
+            if (!hasControls && (!hasPauseStop || !hasVolumeControl)) {
+                console.log(`DEBUG Criteria 1.3.6 \n\tL'elemento multimediale <${element.tagName.toLowerCase()}> non ha controlli per l'audio o per il video.`);
+                isVerified = false;
+            }
         }
     });
 
@@ -400,7 +478,7 @@ function generateAccessibilityReport() {
                 },
                 "1.4 Distinguishable": {
                     // Aggiungi qui le funzioni di valutazione per gli altri criteri
-                    "1.4.2 Audio Control": "",
+                    "1.4.2 Audio Control": evaluateAudioControl() ? "verified" : "not verified",
                     "1.4.3 Contrast (Minimum)": "",
                     "1.4.6 Contrast (Enhanced)": "",
                     "1.4.10 Reflow": "",
