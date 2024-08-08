@@ -459,7 +459,82 @@ function evaluateAudioControl() {
     return isVerified;
 }
 
+// 1.4.3 & 1.4.6 //
+// Funzione per verificare il criterio di successo 1.4.3 Contrast (Minimum) e 1.4.6 Contrast(Enhanced)
+function evaluateContrast(isEnhanced=false) {
+    function getLuminance(color) {
+        const rgb = color.match(/\d+/g).map(Number);
+        const [r, g, b] = rgb.map(value => {
+            value /= 255;
+            return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+    
+    function getContrastRatio(foreground, background) {
+        const lum1 = getLuminance(foreground);
+        const lum2 = getLuminance(background);
+        return (Math.max(lum1, lum2) + 0.05) / (Math.min(lum1, lum2) + 0.05);
+    }
+    const bodyStyle = window.getComputedStyle(document.body);
+    let backgroundColor = bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' ? bodyStyle.backgroundColor : 'rgb(255, 255, 255)';
 
+    // Trovo tutti gli elementi con la proprietà css 'color' all'interno del body
+    const colorElements = Array.from(document.querySelectorAll('body *')).filter(element => {
+        const style = window.getComputedStyle(element);
+        return style.color && style.color !== 'rgba(0, 0, 0, 0)';
+    });
+
+    // Trovo il colore maggiormente presente
+    const colorFrequency = {};
+    colorElements.forEach(element => {
+        const color = window.getComputedStyle(element).color;
+        if (!colorFrequency[color]) {
+            colorFrequency[color] = 0;
+        }
+        colorFrequency[color]++;
+    });
+
+    const sortedColors = Object.keys(colorFrequency).sort((a, b) => colorFrequency[b] - colorFrequency[a]);
+    const mostFrequentColor = sortedColors[0];
+    // const secondMostFrequentColor = sortedColors[1];
+
+    // Calcolo il contrasto tra il background color e i colori maggiormente presenti
+    const contrastRatio1 = getContrastRatio(mostFrequentColor, backgroundColor);
+    // const contrastRatio2 = secondMostFrequentColor ? getContrastRatio(secondMostFrequentColor, backgroundColor) : null;
+
+    // Determino se il contrasto è sufficiente 
+    const fontSize = parseFloat(window.getComputedStyle(document.body).fontSize);
+    const fontWeight = window.getComputedStyle(document.body).fontWeight;
+    const isLargeText = fontSize >= 18 || (fontSize >= 14 && fontWeight === 'bold');
+
+    // Soglie di contrasto basate sull'opzione isEnhanced
+    const minContrast = isLargeText ? (isEnhanced ? 4.5 : 3) : (isEnhanced ? 7 : 4.5);
+
+    const isVerified1 = contrastRatio1 >= minContrast;
+    // const isVerified2 = contrastRatio2 !== null ? contrastRatio2 >= minContrast : true;
+
+    // console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
+    // console.log(`Second most frequent text-color: ${secondMostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio2}`);
+    if(!isEnhanced){
+        if(isVerified1){
+            console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
+            return true
+        }else{
+            console.log(`DEBUG Criteria 1.4.3 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
+            return false
+        }
+    }else{
+        if(isVerified1){
+            console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
+            return true
+        }else{
+            console.log(`DEBUG Criteria 1.4.6 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
+            return false
+        }
+    }
+}
+          
 // Funzione per generare il JSON finale
 function generateAccessibilityReport() {
     const report = {
@@ -479,8 +554,8 @@ function generateAccessibilityReport() {
                 "1.4 Distinguishable": {
                     // Aggiungi qui le funzioni di valutazione per gli altri criteri
                     "1.4.2 Audio Control": evaluateAudioControl() ? "verified" : "not verified",
-                    "1.4.3 Contrast (Minimum)": "",
-                    "1.4.6 Contrast (Enhanced)": "",
+                    "1.4.3 Contrast (Minimum)":  evaluateContrast() ? "verified" : "not verified",
+                    "1.4.6 Contrast (Enhanced)": evaluateContrast(isEnhanced=true) ? "verified" : "not verified",
                     "1.4.10 Reflow": "",
                     "1.4.11 Non-text Contrast": "",
                     "1.4.12 Text Spacing": "",
@@ -522,6 +597,7 @@ function generateAccessibilityReport() {
 browser.runtime.onMessage.addListener(function(message) {
     if (message.command === "analyze") {
         const accessibilityReport = generateAccessibilityReport();
+        // evaluateContrast();
         // evaluateIdentifyPurpose();
         // evaluateOrientation();
         // console.log(accessibilityReport);
