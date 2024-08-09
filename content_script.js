@@ -461,21 +461,22 @@ function evaluateAudioControl() {
 
 // 1.4.3 & 1.4.6 //
 // Funzione per verificare il criterio di successo 1.4.3 Contrast (Minimum) e 1.4.6 Contrast(Enhanced)
+function getLuminance(color) {
+    const rgb = color.match(/\d+/g).map(Number);
+    const [r, g, b] = rgb.map(value => {
+        value /= 255;
+        return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function getContrastRatio(foreground, background) {
+    const lum1 = getLuminance(foreground);
+    const lum2 = getLuminance(background);
+    return (Math.max(lum1, lum2) + 0.05) / (Math.min(lum1, lum2) + 0.05);
+}
+
 function evaluateContrast(isEnhanced=false) {
-    function getLuminance(color) {
-        const rgb = color.match(/\d+/g).map(Number);
-        const [r, g, b] = rgb.map(value => {
-            value /= 255;
-            return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
-        });
-        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    }
-    
-    function getContrastRatio(foreground, background) {
-        const lum1 = getLuminance(foreground);
-        const lum2 = getLuminance(background);
-        return (Math.max(lum1, lum2) + 0.05) / (Math.min(lum1, lum2) + 0.05);
-    }
     const bodyStyle = window.getComputedStyle(document.body);
     let backgroundColor = bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' ? bodyStyle.backgroundColor : 'rgb(255, 255, 255)';
 
@@ -518,7 +519,7 @@ function evaluateContrast(isEnhanced=false) {
     // console.log(`Second most frequent text-color: ${secondMostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio2}`);
     if(!isEnhanced){
         if(isVerified1){
-            console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
+            // console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
             return true
         }else{
             console.log(`DEBUG Criteria 1.4.3 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
@@ -526,13 +527,95 @@ function evaluateContrast(isEnhanced=false) {
         }
     }else{
         if(isVerified1){
-            console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
+            // console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
             return true
         }else{
             console.log(`DEBUG Criteria 1.4.6 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
             return false
         }
     }
+}
+
+// 1.4.10 //
+// Funzione per verificare il criterio di successo 1.4.10 Reflow
+function checkReflow() {
+    const bodyStyle = window.getComputedStyle(document.body);
+    let isVerified = false;
+
+    // Verifica se Flexbox è utilizzato
+    if (bodyStyle.display.includes('flex')) {
+        // console.log('La pagina utilizza Flexbox.');
+        isVerified = true;
+    }
+
+    // Verifica se CSS Grid è utilizzato
+    if (bodyStyle.display.includes('grid')) {
+        // console.log('La pagina utilizza CSS Grid.');
+        isVerified = true;
+    }
+
+    // In alternativa, cerca Flexbox o Grid all'interno di qualsiasi elemento nella pagina
+    if (!isVerified) {
+        const elements = document.querySelectorAll('*');
+        elements.forEach(element => {
+            const style = window.getComputedStyle(element);
+            if (style.display.includes('flex') || style.display.includes('grid')) {
+                // console.log(`L'elemento ${element.tagName.toLowerCase()} utilizza ${style.display.includes('flex') ? 'Flexbox' : 'CSS Grid'}.`);
+                isVerified = true;
+            }
+        });
+    }
+
+    if(!isVerified){
+        console.log(`DEBUG Criteria 1.4.10 \n\tLa pagina non utilizza né Flexbox nè Grid per adattare il layout alle varie viewport`)
+        return false
+    }else{
+        // console.log('La pagina utilizza Flexbox o Grid per adattare il layout alle varie viewport')
+        return true
+    }
+}
+
+// 1.4.11
+// Funzione per verificare il criterio di successo 1.4.11 Non-text Contrast
+function evaluateNonTextContrast() {
+    const elements = document.querySelectorAll('button, input, select, .icon, .graphic, .ui-component');
+    let isVerified = true;
+
+    elements.forEach(element => {
+        const style = window.getComputedStyle(element);
+        // Ignoro input e button privi di contenuto o con display: none
+            if ((element.tagName.toLowerCase() === 'input' || element.tagName.toLowerCase() === 'button') && 
+            (style.display === 'none' || (element.value.trim() === '' && element.textContent.trim() === ''))) {
+            return; // Salta al prossimo elemento
+        }
+    
+        // Gestisco i casi in cui il background è trasparente o non definito
+        let backgroundColor;
+        if (style.background === 'transparent' || style.background === '0 0' || style.backgroundColor === 'rgba(0, 0, 0, 0)') {
+            return; // Salta al prossimo elemento
+        } else {
+            backgroundColor = style.backgroundColor;
+        }
+        const borderColor = style.borderColor !== 'rgba(0, 0, 0, 0)' ? style.borderColor : null;
+        const elementColor = style.color !== 'rgba(0, 0, 0, 0)' ? style.color : null;
+
+        let contrastRatio = null;
+
+        // Verifica il contrasto tra il colore di sfondo e il colore dell'elemento
+        if (elementColor) {
+            contrastRatio = getContrastRatio(elementColor, backgroundColor);
+        } else if (borderColor) {
+            contrastRatio = getContrastRatio(borderColor, backgroundColor);
+        }
+
+        if (contrastRatio && contrastRatio < 3) {
+            console.log(`DEBUG Criteria 1.4.11 \n\tL'elemento ${element.tagName.toLowerCase()} riportato sotto non rispetta il contrasto minimo: ${contrastRatio.toFixed(2)}:1.`);
+            console.log(element, backgroundColor, elementColor, borderColor, contrastRatio)
+            isVerified = false;
+        }
+    });
+
+    return isVerified;
 }
           
 // Funzione per generare il JSON finale
@@ -556,8 +639,8 @@ function generateAccessibilityReport() {
                     "1.4.2 Audio Control": evaluateAudioControl() ? "verified" : "not verified",
                     "1.4.3 Contrast (Minimum)":  evaluateContrast() ? "verified" : "not verified",
                     "1.4.6 Contrast (Enhanced)": evaluateContrast(isEnhanced=true) ? "verified" : "not verified",
-                    "1.4.10 Reflow": "",
-                    "1.4.11 Non-text Contrast": "",
+                    "1.4.10 Reflow": checkReflow() ? "verified" : "not verified",
+                    "1.4.11 Non-text Contrast": evaluateNonTextContrast() ? "verified" : "not verified",
                     "1.4.12 Text Spacing": "",
                     "1.4.13 Content on Hover or Focus": ""
                 }

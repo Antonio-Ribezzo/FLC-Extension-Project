@@ -9,5 +9,3 @@
     - JavaScript
     - Firefox extension architecture
 
-## Appunti
-    - verificare nel criterio 1.3.4 se l'orientazione opposta matcha con la corrispondente media query perchè non riusciamo a cambiare l'orientazione della pagina direttamente dal JavaScript
