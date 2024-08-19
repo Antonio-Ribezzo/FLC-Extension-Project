@@ -617,6 +617,54 @@ function evaluateNonTextContrast() {
 
     return isVerified;
 }
+
+// 1.4.12
+// Funzione per verificare il criterio di successo 1.4.12 "Text Spacing"
+function evaluateTextSpacing() {
+    const textElements = document.querySelectorAll('body, body *:not(noscript):not(script):not(style):not(link):not(svg):not(g):not(path):not(img):not(figure)');
+    let isVerified = true;
+    const debugMessages = [];
+
+    // Applico gli stili di spaziatura per la verifica
+    textElements.forEach(element => {
+        const originalLineHeight = element.style.lineHeight;
+        const originalLetterSpacing = element.style.letterSpacing;
+        const originalWordSpacing = element.style.wordSpacing;
+        const originalMarginBottom = element.style.marginBottom;
+
+        element.style.lineHeight = '1.5';
+        element.style.letterSpacing = '0.12em';
+        element.style.wordSpacing = '0.16em';
+        element.style.marginBottom = '2em';
+        
+
+        const parent = element.parentElement;
+        const elementRect = element.getBoundingClientRect();
+        const parentRect = parent ? parent.getBoundingClientRect() : null;
+
+        // Controllo se il testo viene tagliato rispetto ai bordi del contenitore padre
+        if (parentRect && (Math.floor(elementRect.right) > Math.floor(parentRect.right) || Math.floor(elementRect.bottom) > Math.floor(parentRect.bottom))) {
+            debugMessages.push(`\tIl testo nell'elemento con tag <${element.tagName.toLowerCase()}> viene tagliato e non è completamente visibile se l'utente modifica le spaziature come indicazioni del criterio 1.4.12.`);
+            // per mostrare in console qual è l'elemto specifico
+            // console.log(element)
+            isVerified = false;
+        }
+
+        // Ripristino gli stili originali
+        element.style.lineHeight = originalLineHeight;
+        element.style.letterSpacing = originalLetterSpacing;
+        element.style.wordSpacing = originalWordSpacing;
+        element.style.marginBottom = originalMarginBottom;
+    });
+
+    // Stampo tutti i messaggi di debug in un'unica sezione
+    if (debugMessages.length > 0) {
+        console.log("DEBUG Criteria 1.4.12\n", debugMessages.join("\n"));
+    }
+
+    return isVerified;
+}
+
           
 // Funzione per generare il JSON finale
 function generateAccessibilityReport() {
@@ -641,7 +689,7 @@ function generateAccessibilityReport() {
                     "1.4.6 Contrast (Enhanced)": evaluateContrast(isEnhanced=true) ? "verified" : "not verified",
                     "1.4.10 Reflow": checkReflow() ? "verified" : "not verified",
                     "1.4.11 Non-text Contrast": evaluateNonTextContrast() ? "verified" : "not verified",
-                    "1.4.12 Text Spacing": "",
+                    "1.4.12 Text Spacing": evaluateTextSpacing() ? "verified" : "not verified",
                     "1.4.13 Content on Hover or Focus": ""
                 }
             },
@@ -680,6 +728,8 @@ function generateAccessibilityReport() {
 browser.runtime.onMessage.addListener(function(message) {
     if (message.command === "analyze") {
         const accessibilityReport = generateAccessibilityReport();
+        // Verifica l'impatto della modifica della spaziatura del testo
+        // console.log("Text Spacing Impact Verification:", evaluateTextSpacing()); 
         // evaluateContrast();
         // evaluateIdentifyPurpose();
         // evaluateOrientation();
