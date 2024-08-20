@@ -620,6 +620,9 @@ function evaluateNonTextContrast() {
 
 // 1.4.12
 // Funzione per verificare il criterio di successo 1.4.12 "Text Spacing"
+// The getBoundingClientRect() method returns the size of an element and its position relative to the viewport.
+// The getBoundingClientRect() method returns a DOMRect object with eight properties: left, top, right, bottom, x, y, width, height
+
 function evaluateTextSpacing() {
     const textElements = document.querySelectorAll('body, body *:not(noscript):not(script):not(style):not(link):not(svg):not(g):not(path):not(img):not(figure)');
     let isVerified = true;
@@ -665,7 +668,44 @@ function evaluateTextSpacing() {
     return isVerified;
 }
 
-          
+// 2.4.2
+// Funzione per verificare il criterio di successo 2.4.2 "Page Titled"
+function evaluatePageTitle() {
+    let isVerified = true;
+    const debugMessages = [];
+
+    // Verifica la presenza dell'elemento <title>
+    const titleElement = document.querySelector('head > title');
+    if (!titleElement) {
+        debugMessages.push("\tIl tag <title> non è presente nell'elemento <head> della pagina.");
+        isVerified = false;
+    } else {
+        const titleText = titleElement.textContent.trim();
+
+        // Verifica che il titolo non sia vuoto
+        if (titleText === "") {
+            debugMessages.push("\tIl tag <title> è presente ma non contiene alcun testo.");
+            isVerified = false;
+        }
+
+        // Verifica che il titolo sia descrittivo
+        if (titleText.length < 10) { // Questo controllo può essere adattato in base ai criteri specifici di descrittività
+            debugMessages.push("\tIl titolo della pagina potrebbe non essere sufficientemente descrittivo.");
+            isVerified = false;
+        }
+    }
+
+    // Stampa tutti i messaggi di debug in un'unica sezione
+    if (debugMessages.length > 0) {
+        console.log("DEBUG Criteria 2.4.2 Page Titled\n", debugMessages.join("\n"));
+    } else {
+        // console.log("DEBUG Criteria 2.4.2 Page Titled\nIl titolo della pagina è presente, non è vuoto e sembra descrittivo.");
+    }
+
+    return isVerified;
+}
+
+
 // Funzione per generare il JSON finale
 function generateAccessibilityReport() {
     const report = {
@@ -696,7 +736,7 @@ function generateAccessibilityReport() {
             "Operable": {
                 "2.4 Navigable": {
                     // Aggiungi qui le funzioni di valutazione per gli altri criteri
-                    "2.4.2 Page Titled": "",
+                    "2.4.2 Page Titled": evaluatePageTitle() ? "verified" : "not verified",
                     "2.4.10 Section Headings": ""
                 }
             },
