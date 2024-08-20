@@ -175,18 +175,21 @@ function evaluateInfoAndRelationships(){
 
 // 1.3.2 //
 // Funzione per verificare il criterio di successo 1.3.2 Meaningful Sequence
-function evaluateMeaningfulSequence(){
+// 2.4.10
+// Funzione per verificare il criterio di successo 2.4.10 "Section Headings"
+function evaluateMeaningfulSequence(criterion){
     let isVerified = true;
-
+    let isVerifiedHeadings = true;
     const mainElements = document.querySelectorAll('header, nav, main, footer, section, article, h1, h2, h3, h4, h5, h6')
     let previousElementType = "";
 
     mainElements.forEach(element => {
         const  elementType= element.tagName.toLowerCase();
-
-        if (!isOrderMeaningful(previousElementType, elementType)) {
-            console.log("DEBUG Criteria 1.3.2 \n\tIl primo tag trovato è: " + previousElementType + "\n\tIl secondo tag trovato è: " + elementType + "\n\tL'ordine deve essere il seguente: header, nav, main, section, article, footer.")
-            isVerified = false;
+        if(criterion == "1.3.2"){
+            if (!isOrderMeaningful(previousElementType, elementType)) {
+                console.log("DEBUG Criteria 1.3.2 \n\tIl primo tag trovato è: " + previousElementType + "\n\tIl secondo tag trovato è: " + elementType + "\n\tL'ordine deve essere il seguente: header, nav, main, section, article, footer.")
+                isVerified = false;
+            }
         }
 
         // Gestisco le intestazioni separatamente
@@ -194,14 +197,26 @@ function evaluateMeaningfulSequence(){
         // il metodo .includes controlla se elementType è incluso in questo array.
         if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(elementType)) {
             if (!isHeadingOrderMeaningful(element)) {
-                console.log("DEBUG Criteria 1.3.2 \n\tL'ordine dei titoli non è rispettato \n\tL'ordine deve essere il seguente: h1, h2, h3, h4, h5, h6")
+                if(criterion == "1.3.2"){
+                    console.log("DEBUG Criteria 1.3.2 \n\tL'ordine dei titoli non è rispettato \n\tL'ordine deve essere il seguente: h1, h2, h3, h4, h5, h6")
+                }
                 isVerified = false;
+                isVerifiedHeadings = false;
             }
         }
         previousElementType = elementType;
     });
 
-    return isVerified
+    if(criterion == "1.3.2"){
+        return isVerified
+    }else if(criterion == "2.4.10"){
+        if(!isVerifiedHeadings){
+            console.log("DEBUG Criteria 2.4.10 \n\tL'ordine dei titoli non è rispettato \n\tL'ordine deve essere il seguente: h1, h2, h3, h4, h5, h6")
+            return false
+        }else{
+            return isVerifiedHeadings
+        }
+    }
 }
 
 // Funzione di supporto per determinare se l'ordine tra due tipi di elementi è significativo
@@ -717,7 +732,7 @@ function generateAccessibilityReport() {
                 "1.3 Adaptable": {
                     // Aggiungi qui le funzioni di valutazione per gli altri criteri
                     "1.3.1 Info and Relationships": evaluateInfoAndRelationships() ? "verified" : "not verified",
-                    "1.3.2 Meaningful Sequence": evaluateMeaningfulSequence() ? "verified" : "not verified",
+                    "1.3.2 Meaningful Sequence": evaluateMeaningfulSequence("1.3.2") ? "verified" : "not verified",
                     "1.3.4 Orientation": evaluateOrientation() ? "verified" : "not verified",
                     "1.3.5 Identify Input Purpose": evaluateIdentifyInputPurpose() ? "verified" : "not verified",
                     "1.3.6 Identify Purpose": evaluateIdentifyPurpose() ? "verified" : "not verified"
@@ -737,7 +752,7 @@ function generateAccessibilityReport() {
                 "2.4 Navigable": {
                     // Aggiungi qui le funzioni di valutazione per gli altri criteri
                     "2.4.2 Page Titled": evaluatePageTitle() ? "verified" : "not verified",
-                    "2.4.10 Section Headings": ""
+                    "2.4.10 Section Headings": evaluateMeaningfulSequence("2.4.10") ? "verified" : "not verified",
                 }
             },
             "Understandable": {
