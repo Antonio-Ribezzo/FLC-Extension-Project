@@ -10,7 +10,8 @@
     },
     "permissions": [
       "activeTab",
-      "storage"
+      "storage",
+      "https://ws.detectlanguage.com/"
     ],
     "background": {
       "scripts": ["background.js"],

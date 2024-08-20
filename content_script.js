@@ -689,7 +689,7 @@ function evaluatePageTitle() {
     let isVerified = true;
     const debugMessages = [];
 
-    // Verifica la presenza dell'elemento <title>
+    // Verifico la presenza dell'elemento <title>
     const titleElement = document.querySelector('head > title');
     if (!titleElement) {
         debugMessages.push("\tIl tag <title> non è presente nell'elemento <head> della pagina.");
@@ -697,20 +697,20 @@ function evaluatePageTitle() {
     } else {
         const titleText = titleElement.textContent.trim();
 
-        // Verifica che il titolo non sia vuoto
+        // Verifico che il titolo non sia vuoto
         if (titleText === "") {
             debugMessages.push("\tIl tag <title> è presente ma non contiene alcun testo.");
             isVerified = false;
         }
 
-        // Verifica che il titolo sia descrittivo
+        // Verifico che il titolo sia descrittivo
         if (titleText.length < 10) { // Questo controllo può essere adattato in base ai criteri specifici di descrittività
             debugMessages.push("\tIl titolo della pagina potrebbe non essere sufficientemente descrittivo.");
             isVerified = false;
         }
     }
 
-    // Stampa tutti i messaggi di debug in un'unica sezione
+    // Stampo tutti i messaggi di debug in un'unica sezione
     if (debugMessages.length > 0) {
         console.log("DEBUG Criteria 2.4.2 Page Titled\n", debugMessages.join("\n"));
     } else {
@@ -720,9 +720,64 @@ function evaluatePageTitle() {
     return isVerified;
 }
 
+// 3.1.1
+// Funzione per verificare il criterio di successo 3.1.1 "Language of Page"
+function evaluateLanguageOfPage() {
+    return new Promise((resolve) => {
+        const debugMessages = [];
+
+        // Verifico la presenza dell'elemento <title>
+        const titleElement = document.querySelector('head > title');
+        const titleText = titleElement ? titleElement.textContent.trim() : '';
+
+        // Verifico la presenza dell'attributo lang nell'elemento <html>
+        const htmlElement = document.documentElement;
+        const lang = htmlElement.getAttribute('lang');
+
+        if (!lang) {
+            debugMessages.push("\tL'attributo 'lang' non è presente nell'elemento <html>.");
+            resolve(finalizeEvaluation(false, debugMessages));
+        } else {
+            detectLanguage(titleText).then(langDetect => {
+                if (langDetect === lang) {
+                    resolve(finalizeEvaluation(true, debugMessages));
+                } else {
+                    debugMessages.push(`\tLa lingua identificata è ${langDetect} e non corrisponde con la lingua del documento HTML che è ${lang}`);
+                    resolve(finalizeEvaluation(false, debugMessages));
+                }
+            }).catch(err => {
+                console.error("Errore durante la verifica della lingua:", err);
+                resolve(finalizeEvaluation(false, debugMessages));
+            });
+        }
+    });
+}
+
+function finalizeEvaluation(isVerified, debugMessages) {
+    if (debugMessages.length > 0) {
+        console.log("DEBUG Criteria 3.1.1 Language of Page\n", debugMessages.join("\n"));
+    }
+    return isVerified ? "verified" : "not verified";
+}
+
+function detectLanguage(text) {
+    const apiKey = '3263a01b42208f32cd9e0c697f5cc6cc';
+    const url = `https://ws.detectlanguage.com/0.2/detect?q=${encodeURIComponent(text)}&key=${apiKey}`;
+
+    return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.data && data.data.detections.length > 0) {
+                return data.data.detections[0].language;
+            } else {
+                throw new Error('Unable to detect language');
+            }
+        });
+}
+
 
 // Funzione per generare il JSON finale
-function generateAccessibilityReport() {
+async function generateAccessibilityReport() {
     const report = {
         "guidelines": {
             "Perceivable": {
@@ -730,7 +785,6 @@ function generateAccessibilityReport() {
                     "1.1.1 Non-text Content": evaluateNonTextContent() ? "verified" : "not verified"
                 },
                 "1.3 Adaptable": {
-                    // Aggiungi qui le funzioni di valutazione per gli altri criteri
                     "1.3.1 Info and Relationships": evaluateInfoAndRelationships() ? "verified" : "not verified",
                     "1.3.2 Meaningful Sequence": evaluateMeaningfulSequence("1.3.2") ? "verified" : "not verified",
                     "1.3.4 Orientation": evaluateOrientation() ? "verified" : "not verified",
@@ -738,7 +792,6 @@ function generateAccessibilityReport() {
                     "1.3.6 Identify Purpose": evaluateIdentifyPurpose() ? "verified" : "not verified"
                 },
                 "1.4 Distinguishable": {
-                    // Aggiungi qui le funzioni di valutazione per gli altri criteri
                     "1.4.2 Audio Control": evaluateAudioControl() ? "verified" : "not verified",
                     "1.4.3 Contrast (Minimum)":  evaluateContrast() ? "verified" : "not verified",
                     "1.4.6 Contrast (Enhanced)": evaluateContrast(isEnhanced=true) ? "verified" : "not verified",
@@ -750,26 +803,22 @@ function generateAccessibilityReport() {
             },
             "Operable": {
                 "2.4 Navigable": {
-                    // Aggiungi qui le funzioni di valutazione per gli altri criteri
                     "2.4.2 Page Titled": evaluatePageTitle() ? "verified" : "not verified",
                     "2.4.10 Section Headings": evaluateMeaningfulSequence("2.4.10") ? "verified" : "not verified",
                 }
             },
             "Understandable": {
                 "3.1 Readable": {
-                    // Aggiungi qui le funzioni di valutazione per gli altri criteri
-                    "3.1.1 Language of Page": "",
+                    "3.1.1 Language of Page": await evaluateLanguageOfPage(),
                     "3.1.2 Language of Parts": ""
                 },
                 "3.3 Input Assistance": {
-                    // Aggiungi qui le funzioni di valutazione per gli altri criteri
                     "3.3.2 Labels or Instructions": "",
                     "3.3.8 Accessible Authentication (Minimum)": ""
                 }
             },
             "Robust": {
                 "4.1 Compatible": {
-                    // Aggiungi qui le funzioni di valutazione per gli altri criteri
                     "4.1.2 Name, Role, Value": ""
                 }
             }
@@ -780,9 +829,9 @@ function generateAccessibilityReport() {
 
 
 // Listener per i messaggi ricevuti dal popup (qui viene gestita la comunicazione tra popup.js e content_script.js)
-browser.runtime.onMessage.addListener(function(message) {
+browser.runtime.onMessage.addListener(async function(message) {
     if (message.command === "analyze") {
-        const accessibilityReport = generateAccessibilityReport();
+        const accessibilityReport = await generateAccessibilityReport();
         // Verifica l'impatto della modifica della spaziatura del testo
         // console.log("Text Spacing Impact Verification:", evaluateTextSpacing()); 
         // evaluateContrast();
@@ -792,5 +841,6 @@ browser.runtime.onMessage.addListener(function(message) {
         // console.log(evaluateInfoAndRelationships());
         // Invia il rapporto al popup per la visualizzazione
         browser.runtime.sendMessage({ report: accessibilityReport });
+        // console.log("Report inviato:", accessibilityReport);
     }
 });
