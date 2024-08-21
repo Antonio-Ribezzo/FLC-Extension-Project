@@ -99,7 +99,7 @@ function evaluateInfoAndRelationships(){
         // Se tutte queste condizioni sono vere, significa che l’elemento di input non ha alcuna etichetta o descrizione accessibile
         // quindi la variabile isVerified viene impostata su false.
         if (!label && !input.hasAttribute('aria-label') && !input.hasAttribute('aria-labelledby')) {
-            console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei campi input che non hanno nè un'etichetta (label) nè una attributo aria-labelledby")
+            console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei campi input che non hanno nè un'etichetta (label) nè un attributo aria-labelledby")
             isVerified = false;
         }
     });
@@ -722,6 +722,7 @@ function evaluatePageTitle() {
 
 // 3.1.1
 // Funzione per verificare il criterio di successo 3.1.1 "Language of Page"
+// Facciamo sì che la funzione evaluateLanguageOfPage restituisca una Promise che può essere attesa (await) prima di continuare con la generazione del report. A Promise is an object that represents the eventual completion (or failure) of an asynchronous operation and its resulting value
 function evaluateLanguageOfPage() {
     return new Promise((resolve) => {
         const debugMessages = [];
@@ -732,6 +733,7 @@ function evaluateLanguageOfPage() {
 
         // Verifico la presenza dell'attributo lang nell'elemento <html>
         const htmlElement = document.documentElement;
+        // console.log(htmlElement)
         const lang = htmlElement.getAttribute('lang');
 
         if (!lang) {
@@ -775,6 +777,54 @@ function detectLanguage(text) {
         });
 }
 
+// 3.3.2
+// Funzione per valutare il criterio di successo 3.3.2 Label or Instructions
+function evaluateLabelOrInstructions(){
+    let isVerified = true;
+    const debugMessages = [];
+    // Seleziono tutti gli input, textarea e select, escludendo gli input di tipo hidden
+    const inputs = document.querySelectorAll('input:not([type="hidden"]), textarea, select');
+
+    // Itero su ciascun elemento di input
+    inputs.forEach(input => {
+        const label = document.querySelector(`label[for="${input.id}"]`);
+        const ariaLabel = input.getAttribute('aria-label');
+        const ariaLabelledby = input.getAttribute('aria-labelledby');
+
+        let passed = false;
+
+        // Verifico se esiste una label associata all'input e se contiene almeno 5 caratteri
+        if (label && label.textContent.trim().length >= 5) {
+            passed = true;
+        }
+
+        // Verifica se l'attributo aria-label esiste e contiene almeno 5 caratteri
+        if (ariaLabel && ariaLabel.trim().length >= 5) {
+            passed = true;
+        }
+
+        // Verifica se l'attributo aria-labelledby esiste e fa riferimento a un elemento esistente con almeno 5 caratteri
+        if (ariaLabelledby) {
+            const referencedElement = document.getElementById(ariaLabelledby);
+            if (referencedElement && referencedElement.textContent.trim().length >= 5) {
+                passed = true;
+            }
+        }
+
+        // Se nessuna delle verifiche è passata, imposta isVerified su false e aggiungi un messaggio di debug
+        if (!passed) {
+            debugMessages.push(`\tL'elemento ${input.tagName.toLowerCase()} non ha una label valida o un attributo aria-label/aria-labelledby che sia sufficientemente descrittivo.`);
+            isVerified = false;
+        }
+    });
+
+    // Stampa tutti i messaggi di debug in un'unica sezione
+    if (debugMessages.length > 0) {
+        console.log("DEBUG Criteria 3.3.2\n", debugMessages.join("\n"));
+    }
+
+    return isVerified;
+}
 
 // Funzione per generare il JSON finale
 async function generateAccessibilityReport() {
@@ -813,7 +863,7 @@ async function generateAccessibilityReport() {
                     "3.1.2 Language of Parts": ""
                 },
                 "3.3 Input Assistance": {
-                    "3.3.2 Labels or Instructions": "",
+                    "3.3.2 Labels or Instructions": evaluateLabelOrInstructions() ? "verified" : "not verified",
                     "3.3.8 Accessible Authentication (Minimum)": ""
                 }
             },
@@ -834,6 +884,7 @@ browser.runtime.onMessage.addListener(async function(message) {
         const accessibilityReport = await generateAccessibilityReport();
         // Verifica l'impatto della modifica della spaziatura del testo
         // console.log("Text Spacing Impact Verification:", evaluateTextSpacing()); 
+        evaluateLabelOrInstructions()
         // evaluateContrast();
         // evaluateIdentifyPurpose();
         // evaluateOrientation();
