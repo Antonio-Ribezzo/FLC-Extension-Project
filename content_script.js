@@ -940,7 +940,7 @@ browser.runtime.onMessage.addListener(async function(message) {
         const accessibilityReport = await generateAccessibilityReport();
         // Verifica l'impatto della modifica della spaziatura del testo
         // console.log("Text Spacing Impact Verification:", evaluateTextSpacing()); 
-        evaluateNameRoleValue()
+        // evaluateNameRoleValue()
         // evaluateLabelOrInstructions()
         // evaluateContrast();
         // evaluateIdentifyPurpose();
