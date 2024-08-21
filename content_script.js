@@ -826,6 +826,62 @@ function evaluateLabelOrInstructions(){
     return isVerified;
 }
 
+
+// 4.1.2
+// Funzione per valutare il criterio di successo 4.1.2 Name, Role, Value
+function evaluateNameRoleValue() {
+    let isVerified = true;
+    const debugMessages = [];
+
+    const interactiveElements = document.querySelectorAll('input, button, select, textarea, a');
+    
+    interactiveElements.forEach(element => {
+        let hasName = false;
+        let hasRole = element.hasAttribute('role') || ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA'].includes(element.tagName);
+        let hasValue = false;
+
+        // Verifica il "name"
+        if (element.hasAttribute('aria-label') && element.getAttribute('aria-label').trim().length >= 5) {
+            hasName = true;
+        } else if (element.hasAttribute('aria-labelledby')) {
+            const labelledById = element.getAttribute('aria-labelledby');
+            const labelledElement = document.getElementById(labelledById);
+            if (labelledElement && labelledElement.textContent.trim().length >= 5) {
+                hasName = true;
+            }
+        } else if (element.hasAttribute('title') && element.getAttribute('title').trim().length >= 5) {
+            hasName = true;
+        } else if (element.tagName === 'IMG' && element.hasAttribute('alt') && element.getAttribute('alt').trim().length >= 5) {
+            hasName = true;
+        } else if (element.textContent.trim().length >= 5) {
+            hasName = true;
+        }
+
+        // Verifica il "value"
+        if (element.tagName === 'A') {
+            // Se è un tag <a> può contenere anche un immagine perciò lo poniamo verificato
+            hasValue = true;
+        } else {
+            // Verifica il "value" per gli altri elementi
+            if (element.hasAttribute('aria-valuenow') || element.hasAttribute('value') || element.checked || element.selected) {
+                hasValue = true;
+            }
+        }
+
+        if (!hasName || !hasRole || !hasValue) {
+            isVerified = false;
+            // console.log(element)
+            debugMessages.push(`\tL'elemento ${element.tagName.toLowerCase()} non è stato configurato correttamente (name: ${hasName}, role: ${hasRole}, value: ${hasValue}).`);
+        }
+    });
+
+    if (debugMessages.length > 0) {
+        console.log("DEBUG Criteria 4.1.2\n", debugMessages.join("\n"));
+    }
+
+    return isVerified;
+}
+
 // Funzione per generare il JSON finale
 async function generateAccessibilityReport() {
     const report = {
@@ -864,12 +920,12 @@ async function generateAccessibilityReport() {
                 },
                 "3.3 Input Assistance": {
                     "3.3.2 Labels or Instructions": evaluateLabelOrInstructions() ? "verified" : "not verified",
-                    "3.3.8 Accessible Authentication (Minimum)": ""
+                    "3.3.8 Accessible Authentication (Minimum)": (evaluateNameRoleValue() && evaluateIdentifyInputPurpose()) ? "verified" : "not verified"
                 }
             },
             "Robust": {
                 "4.1 Compatible": {
-                    "4.1.2 Name, Role, Value": ""
+                    "4.1.2 Name, Role, Value": evaluateNameRoleValue() ? "verified" : "not verified"
                 }
             }
         }
@@ -884,7 +940,8 @@ browser.runtime.onMessage.addListener(async function(message) {
         const accessibilityReport = await generateAccessibilityReport();
         // Verifica l'impatto della modifica della spaziatura del testo
         // console.log("Text Spacing Impact Verification:", evaluateTextSpacing()); 
-        evaluateLabelOrInstructions()
+        evaluateNameRoleValue()
+        // evaluateLabelOrInstructions()
         // evaluateContrast();
         // evaluateIdentifyPurpose();
         // evaluateOrientation();
