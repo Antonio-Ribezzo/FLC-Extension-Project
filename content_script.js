@@ -720,6 +720,53 @@ function evaluatePageTitle() {
     return isVerified;
 }
 
+// 2.4.9
+// Funzione per verificare il criterio di successo 2.4.9 "Link Purpose (Link Only)"
+function evaluateLinkPurpose(){
+    const links = document.querySelectorAll('a');
+    const problematicLinks = [];
+
+    links.forEach(link => {
+        const linkText = link.textContent.trim().toLowerCase();
+        const ariaLabel = link.getAttribute('aria-label');
+        const genericTexts = ['click here', 'read more', 'more info', 'link'];
+
+        // Check for generic link texts
+        const isGeneric = genericTexts.some(generic => linkText === generic);
+
+        // Check for raw URLs in link text
+        const isRawURL = linkText.includes('http') || linkText.includes('www');
+
+        // Check for very short links
+        const isShort = linkText.length < 3;
+
+        // Check if aria-label is sufficiently descriptive (minimum 5 characters)
+        const hasDescriptiveAriaLabel = ariaLabel && ariaLabel.trim().length >= 5;
+
+        // Log links that do not meet the criteria and don't have a descriptive aria-label
+        if ((isGeneric || isRawURL || isShort) && !hasDescriptiveAriaLabel) {
+            problematicLinks.push({
+                text: linkText,
+                href: link.href,
+                reason: isGeneric ? 'Testo del link troppo generico' :
+                        isRawURL ? 'Il testo del link appare come un URL grezzo' :
+                        isShort ? 'Il testo del link potrebbe essere troppo corto' : '',
+                ariaLabel: hasDescriptiveAriaLabel ? 'Ha un attributo aria-label sufficientemente descrittivo' : 'Non ha un attributo aria-label sufficientemente descrittivo'
+            });
+        }
+    });
+
+    if (problematicLinks.length > 0) {
+        console.log('DEBUG Criteria 2.4.9 - Link Purpose');
+        problematicLinks.forEach(link => {
+            console.log(`\tLink: "${link.text}" (${link.href}) - Problematica: ${link.reason}, ${link.ariaLabel}`);
+        });
+        return false;
+    } else {
+        return true;
+    }
+}
+
 // 3.1.1
 // Funzione per verificare il criterio di successo 3.1.1 "Language of Page"
 // Facciamo sì che la funzione evaluateLanguageOfPage restituisca una Promise che può essere attesa (await) prima di continuare con la generazione del report. A Promise is an object that represents the eventual completion (or failure) of an asynchronous operation and its resulting value
@@ -904,12 +951,12 @@ async function generateAccessibilityReport() {
                     "1.4.10 Reflow": checkReflow() ? "verified" : "not verified",
                     "1.4.11 Non-text Contrast": evaluateNonTextContrast() ? "verified" : "not verified",
                     "1.4.12 Text Spacing": evaluateTextSpacing() ? "verified" : "not verified",
-                    "1.4.13 Content on Hover or Focus": ""
                 }
             },
             "Operable": {
                 "2.4 Navigable": {
                     "2.4.2 Page Titled": evaluatePageTitle() ? "verified" : "not verified",
+                    "2.4.9 Link Purpose (Link Only)": evaluateLinkPurpose() ? "verified" : "not verified",
                     "2.4.10 Section Headings": evaluateMeaningfulSequence("2.4.10") ? "verified" : "not verified",
                 }
             },
