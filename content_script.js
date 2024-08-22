@@ -474,47 +474,6 @@ function evaluateAudioControl() {
     return isVerified;
 }
 
-// 1.4.4 //
-// Funzione per verificare il criterio di successo 1.4.4 Resize Text
-function evaluateResizeText(){
-    const elements = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, a, div, li, td, th');
-    const debugMessages = [];
-    let isVerified = true;
- 
-    elements.forEach(element => {
-        const style = window.getComputedStyle(element);
- 
-        if (style.fontSize) {
-            // Rilevo l'unità originale
-            const fontSizeMatch = style.fontSize.match(/^([\d\.]+)([a-z%]*)$/);
-            if (fontSizeMatch) {
-                const originalFontSizeValue = parseFloat(fontSizeMatch[1]);
-                const originalFontSizeUnit = fontSizeMatch[2] || 'px';
- 
-                // Raddoppio la dimensione del testo mantenendo l'unità originale
-                element.style.fontSize = `${originalFontSizeValue * 2}${originalFontSizeUnit}`;
- 
-                // Controllo se l’elemento causa overflow o problemi di layout
-                const hasOverflow = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
- 
-                // Ripristino il font size originale
-                element.style.fontSize = `${originalFontSizeValue}${originalFontSizeUnit}`;
- 
-                if (hasOverflow) {
-                    debugMessages.push(`\tProblema di ridimensionamento del testo trovato per l'elemento ${element.tagName.toLowerCase()}`);
-                    isVerified = false;
-                }
-            }
-        }
-    });
- 
-    // Stampo tutti i messaggi di debug in un'unica sezione
-    if (debugMessages.length > 0) {
-        console.log("DEBUG Criteria 1.4.4\n", debugMessages.join("\n"));
-    }
- 
-    return isVerified;
-}
 
 // 1.4.3 & 1.4.6 //
 // Funzione per verificare il criterio di successo 1.4.3 Contrast (Minimum) e 1.4.6 Contrast(Enhanced)
@@ -989,7 +948,6 @@ async function generateAccessibilityReport() {
                 "1.4 Distinguishable": {
                     "1.4.2 Audio Control": evaluateAudioControl() ? "verified" : "not verified",
                     "1.4.3 Contrast (Minimum)":  evaluateContrast() ? "verified" : "not verified",
-                    "1.4.4 Resize Text":  evaluateResizeText() ? "verified" : "not verified",
                     "1.4.6 Contrast (Enhanced)": evaluateContrast(isEnhanced=true) ? "verified" : "not verified",
                     "1.4.10 Reflow": checkReflow() ? "verified" : "not verified",
                     "1.4.11 Non-text Contrast": evaluateNonTextContrast() ? "verified" : "not verified",
