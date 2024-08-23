@@ -1,12 +1,84 @@
+// Questa funzione sarà la prima ad essere chiamata e selezionerà dal DOM della pagina tutti gli elementi necessari per la valutazione dei criteri
+// come output darà una symbol table
+
+function selectElements() {
+    // Symbol table per memorizzare gli elementi del DOM
+    const symbolTable = {
+        bodyStyle: null,
+        allBodyElements: [],
+        nonTextElements: [],
+        headings: [],
+        inputs: [],
+        tables: [],
+        lists: [],
+        ariaElements: [],
+        mainElements: [],
+        regions: [],
+        scripts: [],
+        interactiveElements: [],
+        icons: [],
+        mediaElements: [],
+        graphicalNonTextElements: [],
+        textElements: [],
+        headTitleElement: null,
+        allLinks: [],
+        nameRoleValueElements: []
+    };
+
+    // Popoliamo direttamente la symbolTable
+    const allElements = Array.from(document.querySelectorAll('*'));
+
+    // Iteriamo attraverso gli elementi per popolare la symbolTable
+    allElements.forEach(element => {
+        const tagName = element.tagName.toLowerCase();
+
+        symbolTable.allBodyElements.push(element);
+
+        // Popolare varie categorie
+        if (['img', 'input', 'area', 'object', 'embed', 'svg', 'audio', 'video'].includes(tagName) || 
+            (tagName === 'input' && element.type === 'image')) {
+            symbolTable.nonTextElements.push(element);
+        }
+        if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
+            symbolTable.headings.push(element);
+            symbolTable.mainElements.push(element);  // Anche headings fanno parte dei main elements
+        }
+        if (tagName === 'input' && element.type !== 'hidden' || ['textarea', 'select'].includes(tagName)) {
+            symbolTable.inputs.push(element);
+            symbolTable.graphicalNonTextElements.push(element);
+            symbolTable.nameRoleValueElements.push(element);
+        }
+        if (tagName === 'table') symbolTable.tables.push(element);
+        if (['ul', 'ol', 'dl'].includes(tagName)) symbolTable.lists.push(element);
+        if (element.hasAttribute('aria-labelledby') || element.hasAttribute('aria-describedby')) symbolTable.ariaElements.push(element);
+        if (['header', 'nav', 'main', 'footer', 'section', 'article'].includes(tagName)) {
+            symbolTable.mainElements.push(element);
+            symbolTable.regions.push(element);
+        }
+        if (tagName === 'script') symbolTable.scripts.push(element);
+        if (['button', 'a'].includes(tagName) || element.getAttribute('role') === 'button' || element.getAttribute('role') === 'link') {
+            symbolTable.interactiveElements.push(element);
+            symbolTable.nameRoleValueElements.push(element);  // Gli elementi interattivi sono anche nameRoleValueElements
+        }
+        if (['svg', 'img'].includes(tagName)) symbolTable.icons.push(element);
+        if (['audio', 'video'].includes(tagName)) symbolTable.mediaElements.push(element);
+        if (!['noscript', 'script', 'style', 'link', 'svg', 'g', 'path', 'img', 'figure'].includes(tagName)) {
+            symbolTable.textElements.push(element);
+        }
+        if (tagName === 'a') symbolTable.allLinks.push(element);
+    });
+
+    symbolTable.bodyStyle = window.getComputedStyle(document.body);
+    symbolTable.headTitleElement = document.querySelector('head > title');
+
+    return symbolTable;
+}
+
 // 1.1.1 //
 // Funzione per valutare il criterio di successo 1.1.1 Non-text Content
-function evaluateNonTextContent() {
-    const nonTextElements = [];
+function evaluateNonTextContent(nonTextElements) {
     let passedChecks = 0;
 
-    // Seleziono tutti gli elementi non testuali
-    nonTextElements.push(...document.querySelectorAll('img, input[type="image"], area, object, embed, svg, audio, video'));
-    // console.log(nonTextElements)
     // Valuto ciascun elemento
     nonTextElements.forEach(element => {
         if (element.tagName.toLowerCase() === 'img') {
@@ -81,10 +153,9 @@ function evaluateNonTextContent() {
 
 // 1.3.1 //
 // Funzione per verificare il criterio di successo 1.3.1 Info and Relationships
-function evaluateInfoAndRelationships(){
+function evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements){
     let isVerified = true;
     // Verifica delle intestazioni
-    const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6'); //sarà una node list
     headings.forEach(heading => {
         if(!heading.textContent.trim()){
             console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei titoli (headings) che non hanno contenuto")
@@ -93,7 +164,6 @@ function evaluateInfoAndRelationships(){
     })
 
     // Verifica delle Etichette dei Moduli
-    const inputs = document.querySelectorAll('input, textarea, select');
     inputs.forEach(input => {
         const label = document.querySelector(`label[for="${input.id}"]`);
         // Se tutte queste condizioni sono vere, significa che l’elemento di input non ha alcuna etichetta o descrizione accessibile
@@ -105,7 +175,6 @@ function evaluateInfoAndRelationships(){
     });
 
     // Verifica delle Tabelle
-    const tables = document.querySelectorAll('table');
     tables.forEach(table => {
         const thElements = table.querySelectorAll('th');
         thElements.forEach(th => {
@@ -132,7 +201,6 @@ function evaluateInfoAndRelationships(){
     });
 
     // Verifica degli Elenchi
-    const lists = document.querySelectorAll('ul, ol, dl');
     lists.forEach(list => {
         if (!list.querySelectorAll('li, dt, dd').length) {
             console.log("DEBUG Criteria 1.3.1 \n\tEsistono degli elenchi strutturati in modo errato")
@@ -141,7 +209,6 @@ function evaluateInfoAndRelationships(){
     });
 
     // Verifica dell'uso degli attributi ARIA
-    const ariaElements = document.querySelectorAll('[aria-labelledby], [aria-describedby]');
     ariaElements.forEach(element => {
         // ottengo il valore dell'attributo aria-labelledby dell'elemento corrente
         const ariaLabelledby = element.getAttribute('aria-labelledby');
@@ -177,10 +244,9 @@ function evaluateInfoAndRelationships(){
 // Funzione per verificare il criterio di successo 1.3.2 Meaningful Sequence
 // 2.4.10
 // Funzione per verificare il criterio di successo 2.4.10 "Section Headings"
-function evaluateMeaningfulSequence(criterion){
+function evaluateMeaningfulSequence(criterion, mainElements){
     let isVerified = true;
     let isVerifiedHeadings = true;
-    const mainElements = document.querySelectorAll('header, nav, main, footer, section, article, h1, h2, h3, h4, h5, h6')
     let previousElementType = "";
 
     mainElements.forEach(element => {
@@ -284,7 +350,7 @@ function isHeadingOrderMeaningful(heading) {
 
 // 1.3.4 //
 // Funzione per verificare il criterio di successo 1.3.4 Orientation
-function evaluateOrientation() {
+function evaluateOrientation(scripts) {
     let isVerified = true;
 
     // Verifico l'orientamento corrente del dispositivo utilizzando le proprietà delle media query
@@ -303,7 +369,7 @@ function evaluateOrientation() {
     }
 
     // Ispeziona tutti gli script nel documento per screen.orientation.lock
-    document.querySelectorAll('script').forEach(script => {
+    scripts.forEach(script => {
         let lockDetected = false;
         if (script.textContent.includes('screen.orientation.lock')) {
             lockDetected = true;
@@ -320,11 +386,10 @@ function evaluateOrientation() {
 
 // 1.3.5 //
 // Funzione per verificare il criterio di successo 1.3.5 Identify Input Purpose
-function evaluateIdentifyInputPurpose() {
+function evaluateIdentifyInputPurpose(inputs) {
     let isVerified = true;
-    const inputFields = document.querySelectorAll('input, textarea, select');
 
-    inputFields.forEach(input => {
+    inputs.forEach(input => {
         const type = input.getAttribute('type');
         const autocomplete = input.getAttribute('autocomplete');
         
@@ -365,11 +430,10 @@ function evaluateIdentifyInputPurpose() {
 
 // 1.3.6 //
 // Funzione per verificare il criterio di successo 1.3.6 Identify Purpose
-function evaluateIdentifyPurpose() {
+function evaluateIdentifyPurpose(regions, interactiveElements, icons) {
     let isVerified = true;
 
     // Verifico le regioni della pagina
-    const regions = document.querySelectorAll('header, nav, main, footer, section, article');
     const regionCount = {};
     // La variabile loggedRegions è un insieme (Set) utilizzato per tenere traccia dei tipi di regioni che sono già stati loggati (registrati) nella console per evitare duplicati.
     const loggedRegions = new Set();
@@ -396,7 +460,6 @@ function evaluateIdentifyPurpose() {
     });
 
     // Verifichiamo che gli elementi interattivi abbiano gli attributi ARIA label o ARIA role
-    const interactiveElements = document.querySelectorAll('button, a, [role="button"], [role="link"]');
     const interactiveElementsCount = {};
     const loggedInteractiveElements = new Set();
     // Conto quante volte si presenta ciascun tag nella pagina
@@ -421,7 +484,6 @@ function evaluateIdentifyPurpose() {
     });
 
     // Verifica delle icone e delle immagini
-    const icons = document.querySelectorAll('svg, img');
     const iconCount = {};
     const loggedIcons = new Set();
 
@@ -451,11 +513,9 @@ function evaluateIdentifyPurpose() {
 
 // 1.4.2 //
 // Funzione per verificare il criterio di successo 1.4.2 Audio Control
-function evaluateAudioControl() {
+function evaluateAudioControl(mediaElements) {
     let isVerified = true;
 
-    // Select all audio and video elements
-    const mediaElements = document.querySelectorAll('audio, video');
     // console.log(mediaElements)
     // Check for autoplay and controls attributes
     mediaElements.forEach(element => {
@@ -492,12 +552,11 @@ function getContrastRatio(foreground, background) {
     return (Math.max(lum1, lum2) + 0.05) / (Math.min(lum1, lum2) + 0.05);
 }
 
-function evaluateContrast(isEnhanced=false) {
-    const bodyStyle = window.getComputedStyle(document.body);
+function evaluateContrast(isEnhanced=false, bodyStyle, allBodyElements) {
     let backgroundColor = bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' ? bodyStyle.backgroundColor : 'rgb(255, 255, 255)';
 
     // Trovo tutti gli elementi con la proprietà css 'color' all'interno del body
-    const colorElements = Array.from(document.querySelectorAll('body *')).filter(element => {
+    const colorElements = Array.from(allBodyElements).filter(element => {
         const style = window.getComputedStyle(element);
         return style.color && style.color !== 'rgba(0, 0, 0, 0)';
     });
@@ -554,8 +613,7 @@ function evaluateContrast(isEnhanced=false) {
 
 // 1.4.10 //
 // Funzione per verificare il criterio di successo 1.4.10 Reflow
-function checkReflow() {
-    const bodyStyle = window.getComputedStyle(document.body);
+function checkReflow(bodyStyle, allBodyElements) {
     let isVerified = false;
 
     // Verifica se Flexbox è utilizzato
@@ -572,8 +630,7 @@ function checkReflow() {
 
     // In alternativa, cerca Flexbox o Grid all'interno di qualsiasi elemento nella pagina
     if (!isVerified) {
-        const elements = document.querySelectorAll('*');
-        elements.forEach(element => {
+        allBodyElements.forEach(element => {
             const style = window.getComputedStyle(element);
             if (style.display.includes('flex') || style.display.includes('grid')) {
                 // console.log(`L'elemento ${element.tagName.toLowerCase()} utilizza ${style.display.includes('flex') ? 'Flexbox' : 'CSS Grid'}.`);
@@ -593,11 +650,10 @@ function checkReflow() {
 
 // 1.4.11
 // Funzione per verificare il criterio di successo 1.4.11 Non-text Contrast
-function evaluateNonTextContrast() {
-    const elements = document.querySelectorAll('button, input, select, .icon, .graphic, .ui-component');
+function evaluateNonTextContrast(graphicalNonTextElements) {
     let isVerified = true;
 
-    elements.forEach(element => {
+    graphicalNonTextElements.forEach(element => {
         const style = window.getComputedStyle(element);
         // Ignoro input e button privi di contenuto o con display: none
             if ((element.tagName.toLowerCase() === 'input' || element.tagName.toLowerCase() === 'button') && 
@@ -639,8 +695,7 @@ function evaluateNonTextContrast() {
 // The getBoundingClientRect() method returns the size of an element and its position relative to the viewport.
 // The getBoundingClientRect() method returns a DOMRect object with eight properties: left, top, right, bottom, x, y, width, height
 
-function evaluateTextSpacing() {
-    const textElements = document.querySelectorAll('body, body *:not(noscript):not(script):not(style):not(link):not(svg):not(g):not(path):not(img):not(figure)');
+function evaluateTextSpacing(textElements) {
     let isVerified = true;
     const debugMessages = [];
 
@@ -686,17 +741,16 @@ function evaluateTextSpacing() {
 
 // 2.4.2
 // Funzione per verificare il criterio di successo 2.4.2 "Page Titled"
-function evaluatePageTitle() {
+function evaluatePageTitle(headTitleElement) {
     let isVerified = true;
     const debugMessages = [];
 
     // Verifico la presenza dell'elemento <title>
-    const titleElement = document.querySelector('head > title');
-    if (!titleElement) {
+    if (!headTitleElement) {
         debugMessages.push("\tIl tag <title> non è presente nell'elemento <head> della pagina.");
         isVerified = false;
     } else {
-        const titleText = titleElement.textContent.trim();
+        const titleText = headTitleElement.textContent.trim();
 
         // Verifico che il titolo non sia vuoto
         if (titleText === "") {
@@ -723,11 +777,10 @@ function evaluatePageTitle() {
 
 // 2.4.9
 // Funzione per verificare il criterio di successo 2.4.9 "Link Purpose (Link Only)"
-function evaluateLinkPurpose(){
-    const links = document.querySelectorAll('a');
+function evaluateLinkPurpose(allLinks){
     const problematicLinks = [];
 
-    links.forEach(link => {
+    allLinks.forEach(link => {
         const linkText = link.textContent.trim().toLowerCase();
         const ariaLabel = link.getAttribute('aria-label');
         const genericTexts = ['click here', 'read more', 'more info', 'link'];
@@ -771,13 +824,12 @@ function evaluateLinkPurpose(){
 // 3.1.1
 // Funzione per verificare il criterio di successo 3.1.1 "Language of Page"
 // Facciamo sì che la funzione evaluateLanguageOfPage restituisca una Promise che può essere attesa (await) prima di continuare con la generazione del report. A Promise is an object that represents the eventual completion (or failure) of an asynchronous operation and its resulting value
-function evaluateLanguageOfPage() {
+function evaluateLanguageOfPage(headTitleElement) {
     return new Promise((resolve) => {
         const debugMessages = [];
 
         // Verifico la presenza dell'elemento <title>
-        const titleElement = document.querySelector('head > title');
-        const titleText = titleElement ? titleElement.textContent.trim() : '';
+        const titleText = headTitleElement ? headTitleElement.textContent.trim() : '';
 
         // Verifico la presenza dell'attributo lang nell'elemento <html>
         const htmlElement = document.documentElement;
@@ -827,12 +879,10 @@ function detectLanguage(text) {
 
 // 3.3.2
 // Funzione per valutare il criterio di successo 3.3.2 Label or Instructions
-function evaluateLabelOrInstructions(){
+function evaluateLabelOrInstructions(inputs){
     let isVerified = true;
     const debugMessages = [];
     // Seleziono tutti gli input, textarea e select, escludendo gli input di tipo hidden
-    const inputs = document.querySelectorAll('input:not([type="hidden"]), textarea, select');
-
     // Itero su ciascun elemento di input
     inputs.forEach(input => {
         const label = document.querySelector(`label[for="${input.id}"]`);
@@ -877,13 +927,11 @@ function evaluateLabelOrInstructions(){
 
 // 4.1.2
 // Funzione per valutare il criterio di successo 4.1.2 Name, Role, Value
-function evaluateNameRoleValue() {
+function evaluateNameRoleValue(nameRoleValueElements) {
     let isVerified = true;
     const debugMessages = [];
 
-    const interactiveElements = document.querySelectorAll('input, button, select, textarea, a');
-    
-    interactiveElements.forEach(element => {
+    nameRoleValueElements.forEach(element => {
         let hasName = false;
         let hasRole = element.hasAttribute('role') || ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA'].includes(element.tagName);
         let hasValue = false;
@@ -932,47 +980,89 @@ function evaluateNameRoleValue() {
 
 // Funzione per generare il JSON finale
 async function generateAccessibilityReport() {
+    symbolTable = selectElements()
+    bodyStyle = symbolTable.bodyStyle;
+    allBodyElements = symbolTable.allBodyElements;
+    nonTextElements = symbolTable.nonTextElements;
+    headings = symbolTable.headings;
+    inputs = symbolTable.inputs;
+    tables = symbolTable.tables;
+    lists = symbolTable.lists;
+    ariaElements = symbolTable.ariaElements;
+    mainElements = symbolTable.mainElements;
+    scripts = symbolTable.scripts;
+    regions = symbolTable.regions;
+    interactiveElements = symbolTable.interactiveElements;
+    icons = symbolTable.icons;
+    mediaElements = symbolTable.mediaElements;
+    graphicalNonTextElements = symbolTable.graphicalNonTextElements;
+    textElements = symbolTable.textElements;
+    headTitleElement = symbolTable.headTitleElement;
+    allLinks = symbolTable.allLinks;
+    nameRoleValueElements = symbolTable.nameRoleValueElements;
+
+    // results
+    result111 = evaluateNonTextContent(nonTextElements);
+    result131 = evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements);
+    result132 = evaluateMeaningfulSequence("1.3.2",mainElements);
+    result134 = evaluateOrientation(scripts);
+    result135 = evaluateIdentifyInputPurpose(inputs);
+    result136 = evaluateIdentifyPurpose(regions, interactiveElements, icons);
+    result142 =  evaluateAudioControl(mediaElements);
+    result143 = evaluateContrast(isEnhanced=false,bodyStyle, allBodyElements);
+    result146 = evaluateContrast(isEnhanced=true,bodyStyle, allBodyElements);
+    result1410 = checkReflow(bodyStyle, allBodyElements);
+    result1411 = evaluateNonTextContrast(graphicalNonTextElements);
+    result1412 = evaluateTextSpacing(textElements);
+    result242 = evaluatePageTitle(headTitleElement);
+    result249 = evaluateLinkPurpose(allLinks);
+    result2410 = evaluateMeaningfulSequence("2.4.10", mainElements);
+    result311 = await evaluateLanguageOfPage(headTitleElement);
+    result332 =  evaluateLabelOrInstructions(inputs);
+    result412 =evaluateNameRoleValue(nameRoleValueElements);
+
+
     const report = {
         "guidelines": {
             "Perceivable": {
                 "1.1 Text Alternatives": {
-                    "1.1.1 Non-text Content": evaluateNonTextContent() ? "verified" : "not verified"
+                    "1.1.1 Non-text Content": result111 ? "verified" : "not verified"
                 },
                 "1.3 Adaptable": {
-                    "1.3.1 Info and Relationships": evaluateInfoAndRelationships() ? "verified" : "not verified",
-                    "1.3.2 Meaningful Sequence": evaluateMeaningfulSequence("1.3.2") ? "verified" : "not verified",
-                    "1.3.4 Orientation": evaluateOrientation() ? "verified" : "not verified",
-                    "1.3.5 Identify Input Purpose": evaluateIdentifyInputPurpose() ? "verified" : "not verified",
-                    "1.3.6 Identify Purpose": evaluateIdentifyPurpose() ? "verified" : "not verified"
+                    "1.3.1 Info and Relationships": result131 ? "verified" : "not verified",
+                    "1.3.2 Meaningful Sequence": result132 ? "verified" : "not verified",
+                    "1.3.4 Orientation": result134 ? "verified" : "not verified",
+                    "1.3.5 Identify Input Purpose": result135 ? "verified" : "not verified",
+                    "1.3.6 Identify Purpose": result136 ? "verified" : "not verified"
                 },
                 "1.4 Distinguishable": {
-                    "1.4.2 Audio Control": evaluateAudioControl() ? "verified" : "not verified",
-                    "1.4.3 Contrast (Minimum)":  evaluateContrast() ? "verified" : "not verified",
-                    "1.4.6 Contrast (Enhanced)": evaluateContrast(isEnhanced=true) ? "verified" : "not verified",
-                    "1.4.10 Reflow": checkReflow() ? "verified" : "not verified",
-                    "1.4.11 Non-text Contrast": evaluateNonTextContrast() ? "verified" : "not verified",
-                    "1.4.12 Text Spacing": evaluateTextSpacing() ? "verified" : "not verified",
+                    "1.4.2 Audio Control": result142 ? "verified" : "not verified",
+                    "1.4.3 Contrast (Minimum)":  result143 ? "verified" : "not verified",
+                    "1.4.6 Contrast (Enhanced)": result146 ? "verified" : "not verified",
+                    "1.4.10 Reflow": result1410 ? "verified" : "not verified",
+                    "1.4.11 Non-text Contrast": result1411 ? "verified" : "not verified",
+                    "1.4.12 Text Spacing": result1412 ? "verified" : "not verified",
                 }
             },
             "Operable": {
                 "2.4 Navigable": {
-                    "2.4.2 Page Titled": evaluatePageTitle() ? "verified" : "not verified",
-                    "2.4.9 Link Purpose (Link Only)": evaluateLinkPurpose() ? "verified" : "not verified",
-                    "2.4.10 Section Headings": evaluateMeaningfulSequence("2.4.10") ? "verified" : "not verified",
+                    "2.4.2 Page Titled": result242 ? "verified" : "not verified",
+                    "2.4.9 Link Purpose (Link Only)": result249 ? "verified" : "not verified",
+                    "2.4.10 Section Headings": result2410 ? "verified" : "not verified",
                 }
             },
             "Understandable": {
                 "3.1 Readable": {
-                    "3.1.1 Language of Page": await evaluateLanguageOfPage(),
+                    "3.1.1 Language of Page": result311,
                 },
                 "3.3 Input Assistance": {
-                    "3.3.2 Labels or Instructions": evaluateLabelOrInstructions() ? "verified" : "not verified",
-                    "3.3.8 Accessible Authentication (Minimum)": (evaluateNameRoleValue() && evaluateIdentifyInputPurpose()) ? "verified" : "not verified"
+                    "3.3.2 Labels or Instructions": result332 ? "verified" : "not verified",
+                    "3.3.8 Accessible Authentication (Minimum)": (result412 && result135) ? "verified" : "not verified"
                 }
             },
             "Robust": {
                 "4.1 Compatible": {
-                    "4.1.2 Name, Role, Value": evaluateNameRoleValue() ? "verified" : "not verified"
+                    "4.1.2 Name, Role, Value": result412 ? "verified" : "not verified"
                 }
             }
         }
@@ -985,15 +1075,6 @@ async function generateAccessibilityReport() {
 browser.runtime.onMessage.addListener(async function(message) {
     if (message.command === "analyze") {
         const accessibilityReport = await generateAccessibilityReport();
-        // Verifica l'impatto della modifica della spaziatura del testo
-        // console.log("Text Spacing Impact Verification:", evaluateTextSpacing()); 
-        // evaluateNameRoleValue()
-        // evaluateLabelOrInstructions()
-        // evaluateContrast();
-        // evaluateIdentifyPurpose();
-        // evaluateOrientation();
-        // console.log(accessibilityReport);
-        // console.log(evaluateInfoAndRelationships());
         // Invia il rapporto al popup per la visualizzazione
         browser.runtime.sendMessage({ report: accessibilityReport });
         // console.log("Report inviato:", accessibilityReport);
