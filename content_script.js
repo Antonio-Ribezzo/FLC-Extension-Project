@@ -1023,7 +1023,7 @@ async function generateAccessibilityReport() {
 
 
     const report = {
-        "guidelines": {
+        "GUIDELINES": {
             "Perceivable": {
                 "1.1 Text Alternatives": {
                     "1.1.1 Non-text Content": result111 ? "verified" : "not verified"
