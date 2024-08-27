@@ -1,7 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
   const analyzeButton = document.getElementById('analyzeButton');
+  const loadingElement = document.getElementById('loading');
+  const reportContainer = document.getElementById('report');
   
   analyzeButton.addEventListener('click', function() {
+      // Mostro l'icona di caricamento
+      loadingElement.style.display = 'block';
+      reportContainer.style.display = 'none';
       // Invia un messaggio al content script per iniziare l'analisi
       // Questa parte del codice utilizza l’API del browser per inviare un messaggio al content script dell’estensione. 
       // browser.tabs.query ottiene la scheda attiva nella finestra corrente, quindi browser.tabs.sendMessage invia un messaggio con il comando analyze al content script di quella scheda.
@@ -15,6 +20,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (message.report) {
           console.log("Messaggio ricevuto:", message.report);
           displayReport(message.report);
+
+          // Nascondo l'icona di caricamento e mostra il report
+          loadingElement.style.display = 'none';
+          reportContainer.style.display = 'block';
       }
   });
 });
