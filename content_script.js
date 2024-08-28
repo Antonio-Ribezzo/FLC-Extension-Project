@@ -980,6 +980,7 @@ function evaluateNameRoleValue(nameRoleValueElements) {
 
 // Funzione per generare il JSON finale
 async function generateAccessibilityReport() {
+    // estrazione degli elementi
     symbolTable = selectElements()
     bodyStyle = symbolTable.bodyStyle;
     allBodyElements = symbolTable.allBodyElements;
@@ -1001,6 +1002,9 @@ async function generateAccessibilityReport() {
     allLinks = symbolTable.allLinks;
     nameRoleValueElements = symbolTable.nameRoleValueElements;
 
+    // URL of the site
+    siteURL = window.location.href;
+
     // results
     result111 = evaluateNonTextContent(nonTextElements);
     result131 = evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements);
@@ -1008,7 +1012,7 @@ async function generateAccessibilityReport() {
     result134 = evaluateOrientation(scripts);
     result135 = evaluateIdentifyInputPurpose(inputs);
     result136 = evaluateIdentifyPurpose(regions, interactiveElements, icons);
-    result142 =  evaluateAudioControl(mediaElements);
+    result142 = evaluateAudioControl(mediaElements);
     result143 = evaluateContrast(isEnhanced=false,bodyStyle, allBodyElements);
     result146 = evaluateContrast(isEnhanced=true,bodyStyle, allBodyElements);
     result1410 = checkReflow(bodyStyle, allBodyElements);
@@ -1018,11 +1022,14 @@ async function generateAccessibilityReport() {
     result249 = evaluateLinkPurpose(allLinks);
     result2410 = evaluateMeaningfulSequence("2.4.10", mainElements);
     result311 = await evaluateLanguageOfPage(headTitleElement);
-    result332 =  evaluateLabelOrInstructions(inputs);
+    result332 = evaluateLabelOrInstructions(inputs);
     result412 =evaluateNameRoleValue(nameRoleValueElements);
 
 
     const report = {
+        "WEBSITE": {
+            "URL" : siteURL
+        },
         "GUIDELINES": {
             "Perceivable": {
                 "1.1 Text Alternatives": {
