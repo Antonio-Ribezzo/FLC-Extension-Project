@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Riceve il rapporto dal content script e lo visualizza
   browser.runtime.onMessage.addListener(function(message) {
       if (message.report) {
-          console.log("Messaggio ricevuto:", message.report);
+          // console.log("Messaggio ricevuto:", message.report);
           displayReport(message.report);
 
           // Nascondo l'icona di caricamento, mostro il report e il pulsante "analizza"
