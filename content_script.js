@@ -142,10 +142,13 @@ function evaluateNonTextContent(nonTextElements) {
         // Può essere true o false
         const limit = 90;
         if(successRate >= limit){
-            console.log("DEBUG Criteria 1.1.1 \n\tAlmeno " +  limit +"% dei contenuti non testuali ha un'alternativa testuale")
+            //console.log("DEBUG Criterion 1.1.1 \n\tAlmeno " +  limit +"% dei contenuti non testuali ha un'alternativa testuale")
+            console.log("DEBUG Criterion 1.1.1 \n\tAt least " +  limit + "% of non-text content has a textual alternative");
+
             return true
         }else{
-            console.log("DEBUG Criteria 1.1.1 \n\tPiù del " +  (100-limit) +"% dei contenuti non testuali non ha un'alternativa testuale")
+            //console.log("DEBUG Criterion 1.1.1 \n\tPiù del " +  (100-limit) +"% dei contenuti non testuali non ha un'alternativa testuale")
+            console.log("DEBUG Criterion 1.1.1 \n\tMore than " +  (100-limit) +"% of non-text content does not have a textual alternative");
             return false
         }
     }
@@ -158,7 +161,9 @@ function evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements)
     // Verifica delle intestazioni
     headings.forEach(heading => {
         if(!heading.textContent.trim()){
-            console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei titoli (headings) che non hanno contenuto")
+            //console.log("DEBUG Criterion 1.3.1 \n\tEsistono dei titoli (headings) che non hanno contenuto")
+            console.log("DEBUG Criterion 1.3.1 \n\tThere are headings without content");
+
             isVerified = false;
         }
     })
