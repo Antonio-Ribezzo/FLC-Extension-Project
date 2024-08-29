@@ -1009,6 +1009,7 @@ async function generateAccessibilityReport() {
 
     // URL of the site
     siteURL = window.location.href;
+    slicedSiteURL = siteURL.slice(0, 30) + "..."
 
     // results
     result111 = evaluateNonTextContent(nonTextElements);
@@ -1033,7 +1034,7 @@ async function generateAccessibilityReport() {
 
     const report = {
         "WEBSITE": {
-            "URL" : siteURL
+            "URL" : slicedSiteURL
         },
         "GUIDELINES": {
             "Perceivable": {
