@@ -178,7 +178,8 @@ function evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements)
         // Se tutte queste condizioni sono vere, significa che l’elemento di input non ha alcuna etichetta o descrizione accessibile
         // quindi la variabile isVerified viene impostata su false.
         if (!label && !input.hasAttribute('aria-label') && !input.hasAttribute('aria-labelledby')) {
-            console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei campi input che non hanno nè un'etichetta (label) nè un attributo aria-labelledby")
+            // console.log("DEBUG Criterion 1.3.1 \n\tEsistono dei campi input che non hanno nè un'etichetta (label) nè un attributo aria-labelledby")
+            console.log("DEBUG Criterion 1.3.1 \n\tThere are input fields that have neither a label nor an aria-labelledby attribute");
             isVerified = false;
         }
     });
@@ -188,7 +189,8 @@ function evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements)
         const thElements = table.querySelectorAll('th');
         thElements.forEach(th => {
             if (!th.hasAttribute('scope') && !th.hasAttribute('id')) {
-                console.log("DEBUG Criteria 1.3.1 \n\tEsistono delle tabelle con tag 'th' che sono senza attributo scope e/o attributo id")
+                //console.log("DEBUG Criterion 1.3.1 \n\tEsistono delle tabelle con tag 'th' che sono senza attributo scope e/o attributo id")
+                console.log("DEBUG Criterion 1.3.1 \n\tThere are tables with 'th' tags that lack a scope attribute and/or an id attribute");
                 isVerified = false;
             }
         });
@@ -201,7 +203,9 @@ function evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements)
                 // verifico che ogni ID corrisponda ad un elemento esistente
                 headerIds.forEach(headerId => {
                     if (!document.getElementById(headerId)) {
-                        console.log("DEBUG Criteria 1.3.1 \n\tEsistono delle tabelle con tag 'td' che non corrispondono ad alcun elemento")
+                        // console.log("DEBUG Criterion 1.3.1 \n\tEsistono delle tabelle con tag 'td' che non corrispondono ad alcun elemento")
+                        console.log("DEBUG Criterion 1.3.1 \n\tThere are tables with 'td' tags that do not correspond to any element");
+
                         isVerified = false;
                     }
                 });
@@ -212,7 +216,9 @@ function evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements)
     // Verifica degli Elenchi
     lists.forEach(list => {
         if (!list.querySelectorAll('li, dt, dd').length) {
-            console.log("DEBUG Criteria 1.3.1 \n\tEsistono degli elenchi strutturati in modo errato")
+            // console.log("DEBUG Criterion 1.3.1 \n\tEsistono degli elenchi strutturati in modo errato")
+            console.log("DEBUG Criterion 1.3.1 \n\tThere are lists structured incorrectly");
+
             isVerified = false;
         }
     });
@@ -228,7 +234,8 @@ function evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements)
             // Se un ID non corrisponde ad un elemento esistente, imposta isVerified a false.
             labelledbyIds.forEach(id => {
                 if (!document.getElementById(id)) {
-                    console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei tag con attributi aria-labelledby non associati ad alcun elemento")
+                    // console.log("DEBUG Criterion 1.3.1 \n\tEsistono dei tag con attributi aria-labelledby non associati ad alcun elemento")
+                    console.log("DEBUG Criterion 1.3.1 \n\tThere are tags with aria-labelledby attributes not associated with any element");
                     isVerified = false;
                 }
             });
@@ -239,7 +246,8 @@ function evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements)
             const describedbyIds = ariaDescribedby.split(' ');
             describedbyIds.forEach(id => {
                 if (!document.getElementById(id)) {
-                    console.log("DEBUG Criteria 1.3.1 \n\tEsistono dei tag con attributi aria-describedby non associati ad alcun elemento")
+                    //console.log("DEBUG Criterion 1.3.1 \n\tEsistono dei tag con attributi aria-describedby non associati ad alcun elemento")
+                    console.log("DEBUG Criterion 1.3.1 \n\tThere are tags with aria-describedby attributes not associated with any element");
                     isVerified = false;
                 }
             });
@@ -262,7 +270,8 @@ function evaluateMeaningfulSequence(criterion, mainElements){
         const  elementType= element.tagName.toLowerCase();
         if(criterion == "1.3.2"){
             if (!isOrderMeaningful(previousElementType, elementType)) {
-                console.log("DEBUG Criteria 1.3.2 \n\tIl primo tag trovato è: " + previousElementType + "\n\tIl secondo tag trovato è: " + elementType + "\n\tL'ordine deve essere il seguente: header, nav, main, section, article, footer.")
+                // console.log("DEBUG Criterion 1.3.2 \n\tIl primo tag trovato è: " + previousElementType + "\n\tIl secondo tag trovato è: " + elementType + "\n\tL'ordine deve essere il seguente: header, nav, main, section, article, footer.")
+                console.log("DEBUG Criterion 1.3.2 \n\tThe first tag which was found is: " + previousElementType + "\n\tThe second tag which was found is: " + elementType + "\n\tThe correct order should be: header, nav, main, section, article, footer.");
                 isVerified = false;
             }
         }
@@ -273,7 +282,8 @@ function evaluateMeaningfulSequence(criterion, mainElements){
         if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(elementType)) {
             if (!isHeadingOrderMeaningful(element)) {
                 if(criterion == "1.3.2"){
-                    console.log("DEBUG Criteria 1.3.2 \n\tL'ordine dei titoli non è rispettato \n\tL'ordine deve essere il seguente: h1, h2, h3, h4, h5, h6")
+                    // console.log("DEBUG Criterion 1.3.2 \n\tL'ordine dei titoli non è rispettato \n\tL'ordine deve essere il seguente: h1, h2, h3, h4, h5, h6")
+                    console.log("DEBUG Criterion 1.3.2 \n\tThe heading order is not correct \n\tThe correct order should be: h1, h2, h3, h4, h5, h6");
                 }
                 isVerified = false;
                 isVerifiedHeadings = false;
@@ -286,7 +296,8 @@ function evaluateMeaningfulSequence(criterion, mainElements){
         return isVerified
     }else if(criterion == "2.4.10"){
         if(!isVerifiedHeadings){
-            console.log("DEBUG Criteria 2.4.10 \n\tL'ordine dei titoli non è rispettato \n\tL'ordine deve essere il seguente: h1, h2, h3, h4, h5, h6")
+            //console.log("DEBUG Criterion 2.4.10 \n\tL'ordine dei titoli non è rispettato \n\tL'ordine deve essere il seguente: h1, h2, h3, h4, h5, h6")
+            console.log("DEBUG Criterion 2.4.10 \n\tThe heading order is not correct \n\tThe correct order should be: h1, h2, h3, h4, h5, h6");
             return false
         }else{
             return isVerifiedHeadings
@@ -373,7 +384,8 @@ function evaluateOrientation(scripts) {
 
     // Verifica se la media query per l'orientamento corrente è matches
     if ((initialOrientation === 'portrait' && !portraitQuery.matches) || (initialOrientation === 'landscape' && !landscapeQuery.matches)) {
-        console.log("DEBUG Criteria 1.3.4 \n\tEsistono media query che bloccano l'orientamento")
+        // console.log("DEBUG Criterion 1.3.4 \n\tEsistono media query che bloccano l'orientamento")
+        console.log("DEBUG Criterion 1.3.4 \n\tThere are media queries that block orientation");
         isVerified = false;
     }
 
@@ -382,10 +394,12 @@ function evaluateOrientation(scripts) {
         let lockDetected = false;
         if (script.textContent.includes('screen.orientation.lock')) {
             lockDetected = true;
-            console.log('DEBUG Criteria 1.3.4 \n\tscreen.orientation.lock trovato nello script:', script.textContent);
+            // console.log('DEBUG Criterion 1.3.4 \n\tscreen.orientation.lock trovato nello script:', script.textContent);
+            console.log('DEBUG Criterion 1.3.4 \n\tscreen.orientation.lock found in the script:', script.textContent);
         }
         if (lockDetected) {
-            console.log("DEBUG Criteria 1.3.4 \n\tEsistono script che bloccano l'orientamento.");
+            // console.log("DEBUG Criterion 1.3.4 \n\tEsistono script che bloccano l'orientamento.");
+            console.log("DEBUG Criterion 1.3.4 \n\tSome scripts lock the screen orientation.");
             isVerified = false;
         }
     });
@@ -423,13 +437,14 @@ function evaluateIdentifyInputPurpose(inputs) {
 
         if (type && !validInputTypes.includes(type)) {
             isVerified = false;
-            console.log(`DEBUG Criteria 1.3.5 \n\tTrovato un input type non valido: ${type}`);
+            // console.log(`DEBUG Criterion 1.3.5 \n\tTrovato un input type non valido: ${type}`);
+            console.log(`DEBUG Criterion 1.3.5 \n\tAn invalid input type was found: ${type}`);
         }
         
         if (autocomplete && !validAutocompletes.includes(autocomplete)) {
             isVerified = false;
-            console.log(`DEBUG Criteria 1.3.5 \n\tTrovato un attributo autocomplete non valido: ${autocomplete}`);
-            console.log(`Invalid autocomplete attribute detected: ${autocomplete}`);
+            // console.log(`DEBUG Criterion 1.3.5 \n\tTrovato un attributo autocomplete non valido: ${autocomplete}`);
+            console.log(`DEBUG Criterion 1.3.5 \n\tInvalid autocomplete attribute detected: ${autocomplete}`);
         }
     });
 
@@ -461,7 +476,8 @@ function evaluateIdentifyPurpose(regions, interactiveElements, icons) {
         const tagName = region.tagName.toLowerCase();
         if (regionCount[tagName] > 1 && !loggedRegions.has(tagName)) {
             if (!region.hasAttribute('role') && !region.hasAttribute('aria-labelledby') && !region.hasAttribute('aria-describedby') && !region.hasAttribute('aria-label')) {
-                console.log(`DEBUG Criteria 1.3.6 \n\tIl tag ${region.tagName.toLowerCase()} è presente più di una volta e non ha attributi ARIA role oppure ARIA labels.`);
+                // console.log(`DEBUG Criterion 1.3.6 \n\tIl tag ${region.tagName.toLowerCase()} è presente più di una volta e non ha attributi ARIA role oppure ARIA labels.`);
+                console.log(`DEBUG Criterion 1.3.6 \n\tThe ${region.tagName.toLowerCase()} tag appears more than once and lacks ARIA role or ARIA label attributes.`);
                 isVerified = false;
                 loggedRegions.add(tagName);
             }
@@ -485,7 +501,8 @@ function evaluateIdentifyPurpose(regions, interactiveElements, icons) {
         const tagName = element.tagName.toLowerCase();
         if (interactiveElementsCount[tagName] > 1 && !loggedInteractiveElements.has(tagName)) {
             if (!element.hasAttribute('aria-label') && !element.hasAttribute('aria-labelledby') && !element.hasAttribute('aria-describedby') && !element.hasAttribute('role')) {
-                console.log(`DEBUG Criteria 1.3.6 \n\tCi sono elementi interattivi <${element.tagName.toLowerCase()}> che non hanno attributi ARIA role oppure ARIA labels.`);
+                // console.log(`DEBUG Criterion 1.3.6 \n\tCi sono elementi interattivi <${element.tagName.toLowerCase()}> che non hanno attributi ARIA role oppure ARIA labels.`);
+                console.log(`DEBUG Criterion 1.3.6 \n\tThere are interactive elements <${element.tagName.toLowerCase()}> without ARIA role or ARIA label attributes.`);
                 isVerified = false;
                 loggedInteractiveElements.add(tagName);
             }
@@ -510,7 +527,9 @@ function evaluateIdentifyPurpose(regions, interactiveElements, icons) {
         const tagName = icon.tagName.toLowerCase();
         if (iconCount[tagName] > 1 && !loggedIcons.has(tagName)) {
             if (!icon.hasAttribute('aria-label') && !icon.hasAttribute('aria-labelledby') && !icon.hasAttribute('aria-describedby') && !icon.hasAttribute('role')) {
-                console.log(`DEBUG Criteria 1.3.6 \n\tCi sono icone <${icon.tagName.toLowerCase()}> che non hanno attributi ARIA role oppure ARIA labels.`);
+                //console.log(`DEBUG Criterion 1.3.6 \n\tCi sono icone <${icon.tagName.toLowerCase()}> che non hanno attributi ARIA role oppure ARIA labels.`);
+                console.log(`DEBUG Criterion 1.3.6 \n\tThere are icons <${icon.tagName.toLowerCase()}> without ARIA role or ARIA label attributes.`);
+
                 isVerified = false;
                 loggedIcons.add(tagName);
             }
@@ -534,7 +553,8 @@ function evaluateAudioControl(mediaElements) {
             const hasVolumeControl = element.querySelector('input[type="range"][aria-label="volume"]');
 
             if (!hasControls && (!hasPauseStop || !hasVolumeControl)) {
-                console.log(`DEBUG Criteria 1.3.6 \n\tL'elemento multimediale <${element.tagName.toLowerCase()}> non ha controlli per l'audio o per il video.`);
+                //console.log(`DEBUG Criterion 1.3.6 \n\tL'elemento multimediale <${element.tagName.toLowerCase()}> non ha controlli per l'audio o per il video.`);
+                console.log(`DEBUG Criterion 1.3.6 \n\tThe multimedia element <${element.tagName.toLowerCase()}> does not have audio nor video controls.`);
                 isVerified = false;
             }
         }
@@ -606,7 +626,8 @@ function evaluateContrast(isEnhanced=false, bodyStyle, allBodyElements) {
             // console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
             return true
         }else{
-            console.log(`DEBUG Criteria 1.4.3 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
+            // console.log(`DEBUG Criterion 1.4.3 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
+            console.log(`DEBUG Criterion 1.4.3 \n\tThe most frequently used text color (${mostFrequentColor}) and the second most used color (${secondMostFrequentColor}) do not provide adequate contrast with the background color (${backgroundColor}). There may be exceptions.`);
             return false
         }
     }else{
@@ -614,7 +635,8 @@ function evaluateContrast(isEnhanced=false, bodyStyle, allBodyElements) {
             // console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
             return true
         }else{
-            console.log(`DEBUG Criteria 1.4.6 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
+            // console.log(`DEBUG Criterion 1.4.6 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
+            console.log(`DEBUG Criterion 1.4.6 \n\tThe most frequently used text color (${mostFrequentColor}) and the second most used color (${secondMostFrequentColor}) do not provide adequate contrast with the background color (${backgroundColor}). There may be exceptions.`);
             return false
         }
     }
@@ -649,7 +671,8 @@ function checkReflow(bodyStyle, allBodyElements) {
     }
 
     if(!isVerified){
-        console.log(`DEBUG Criteria 1.4.10 \n\tLa pagina non utilizza né Flexbox nè Grid per adattare il layout alle varie viewport`)
+       //console.log(`DEBUG Criterion 1.4.10 \n\tLa pagina non utilizza né Flexbox nè Grid per adattare il layout alle varie viewport.`)
+        console.log(`DEBUG Criterion 1.4.10 \n\tThe page does not use either Flexbox or Grid to adapt the layout to different viewports.`);
         return false
     }else{
         // console.log('La pagina utilizza Flexbox o Grid per adattare il layout alle varie viewport')
@@ -690,7 +713,8 @@ function evaluateNonTextContrast(graphicalNonTextElements) {
         }
 
         if (contrastRatio && contrastRatio < 3) {
-            console.log(`DEBUG Criteria 1.4.11 \n\tL'elemento ${element.tagName.toLowerCase()} riportato sotto non rispetta il contrasto minimo: ${contrastRatio.toFixed(2)}:1.`);
+            // console.log(`DEBUG Criterion 1.4.11 \n\tL'elemento ${element.tagName.toLowerCase()} riportato sotto non rispetta il contrasto minimo: ${contrastRatio.toFixed(2)}:1.`);
+            console.log(`DEBUG Criterion 1.4.11 \n\tThe ${element.tagName.toLowerCase()} element shown below does not meet the minimum contrast ratio: ${contrastRatio.toFixed(2)}:1.`);
             console.log(element, backgroundColor, elementColor, borderColor, contrastRatio)
             isVerified = false;
         }
@@ -727,7 +751,9 @@ function evaluateTextSpacing(textElements) {
 
         // Controllo se il testo viene tagliato rispetto ai bordi del contenitore padre
         if (parentRect && (Math.floor(elementRect.right) > Math.floor(parentRect.right) || Math.floor(elementRect.bottom) > Math.floor(parentRect.bottom))) {
-            debugMessages.push(`\tIl testo nell'elemento con tag <${element.tagName.toLowerCase()}> viene tagliato e non è completamente visibile se l'utente modifica le spaziature come indicazioni del criterio 1.4.12.`);
+            //debugMessages.push(`\tIl testo nell'elemento con tag <${element.tagName.toLowerCase()}> viene tagliato e non è completamente visibile se l'utente modifica le spaziature come indicazioni del criterio 1.4.12.`);
+            debugMessages.push(`\tThe text in the <${element.tagName.toLowerCase()}> element is cut off and not fully visible if the user adjusts the spacing.`);
+
             // per mostrare in console qual è l'elemto specifico
             // console.log(element)
             isVerified = false;
@@ -742,7 +768,7 @@ function evaluateTextSpacing(textElements) {
 
     // Stampo tutti i messaggi di debug in un'unica sezione
     if (debugMessages.length > 0) {
-        console.log("DEBUG Criteria 1.4.12\n", debugMessages.join("\n"));
+        console.log("DEBUG Criterion 1.4.12\n", debugMessages.join("\n"));
     }
 
     return isVerified;
@@ -756,29 +782,33 @@ function evaluatePageTitle(headTitleElement) {
 
     // Verifico la presenza dell'elemento <title>
     if (!headTitleElement) {
-        debugMessages.push("\tIl tag <title> non è presente nell'elemento <head> della pagina.");
+        //debugMessages.push("\tIl tag <title> non è presente nell'elemento <head> della pagina.");
+        debugMessages.push("\tThe <title> tag is missing from the <head> element of the page.");
         isVerified = false;
     } else {
         const titleText = headTitleElement.textContent.trim();
 
         // Verifico che il titolo non sia vuoto
         if (titleText === "") {
-            debugMessages.push("\tIl tag <title> è presente ma non contiene alcun testo.");
+            //debugMessages.push("\tIl tag <title> è presente ma non contiene alcun testo.");
+            debugMessages.push("\tThe <title> tag exists but does not contain any text.");
             isVerified = false;
         }
 
         // Verifico che il titolo sia descrittivo
         if (titleText.length < 10) { // Questo controllo può essere adattato in base ai criteri specifici di descrittività
-            debugMessages.push("\tIl titolo della pagina potrebbe non essere sufficientemente descrittivo.");
+            //debugMessages.push("\tIl titolo della pagina potrebbe non essere sufficientemente descrittivo.");
+            debugMessages.push("\tThe page title may lack adequate detail.");
             isVerified = false;
         }
     }
 
     // Stampo tutti i messaggi di debug in un'unica sezione
     if (debugMessages.length > 0) {
-        console.log("DEBUG Criteria 2.4.2 Page Titled\n", debugMessages.join("\n"));
+        console.log("DEBUG Criterion 2.4.2 Page Titled\n", debugMessages.join("\n"));
     } else {
-        // console.log("DEBUG Criteria 2.4.2 Page Titled\nIl titolo della pagina è presente, non è vuoto e sembra descrittivo.");
+        // console.log("DEBUG Criterion 2.4.2 Page Titled\nIl titolo della pagina è presente, non è vuoto e sembra descrittivo.");
+        // console.log("DEBUG Criterion 2.4.2 Page Titled\nThe page title exists, is non-empty, and appears to be sufficiently descriptive.");
     }
 
     return isVerified;
@@ -811,18 +841,22 @@ function evaluateLinkPurpose(allLinks){
             problematicLinks.push({
                 text: linkText,
                 href: link.href,
-                reason: isGeneric ? 'Testo del link troppo generico' :
-                        isRawURL ? 'Il testo del link appare come un URL grezzo' :
-                        isShort ? 'Il testo del link potrebbe essere troppo corto' : '',
-                ariaLabel: hasDescriptiveAriaLabel ? 'Ha un attributo aria-label sufficientemente descrittivo' : 'Non ha un attributo aria-label sufficientemente descrittivo'
+                // reason: isGeneric ? 'Testo del link troppo generico' :
+                //         isRawURL ? 'Il testo del link appare come un URL grezzo' :
+                //         isShort ? 'Il testo del link potrebbe essere troppo corto' : '',
+                // ariaLabel: hasDescriptiveAriaLabel ? 'Ha un attributo aria-label sufficientemente descrittivo' : 'Non ha un attributo aria-label sufficientemente descrittivo'
+                reason: isGeneric ? 'Link text is too generic' :
+                        isRawURL ? 'Link text appears as a raw URL' :
+                        isShort ? 'Link text may be too short' : '',
+                ariaLabel: hasDescriptiveAriaLabel ? 'It has a sufficiently descriptive aria-label attribute' : 'It lacks a sufficiently descriptive aria-label attribute'
             });
         }
     });
 
     if (problematicLinks.length > 0) {
-        console.log('DEBUG Criteria 2.4.9 - Link Purpose');
+        console.log('DEBUG Criterion 2.4.9 - Link Purpose');
         problematicLinks.forEach(link => {
-            console.log(`\tLink: "${link.text}" (${link.href}) - Problematica: ${link.reason}, ${link.ariaLabel}`);
+            console.log(`\tLink: "${link.text}" (${link.href}) - Issue: ${link.reason}, ${link.ariaLabel}`);
         });
         return false;
     } else {
@@ -846,14 +880,16 @@ function evaluateLanguageOfPage(headTitleElement) {
         const lang = htmlElement.getAttribute('lang');
 
         if (!lang) {
-            debugMessages.push("\tL'attributo 'lang' non è presente nell'elemento <html>.");
+            // debugMessages.push("\tL'attributo 'lang' non è presente nell'elemento <html>.");
+            debugMessages.push("\tThe 'lang' attribute is missing from the <html> element.");
             resolve(finalizeEvaluation(false, debugMessages));
         } else {
             detectLanguage(titleText).then(langDetect => {
                 if (langDetect === lang) {
                     resolve(finalizeEvaluation(true, debugMessages));
                 } else {
-                    debugMessages.push(`\tLa lingua identificata è ${langDetect} e non corrisponde con la lingua del documento HTML che è ${lang}`);
+                    // debugMessages.push(`\tLa lingua identificata è ${langDetect} e non corrisponde con la lingua del documento HTML che è ${lang}`);
+                    debugMessages.push(`\tThe detected language is ${langDetect} and does not match the language of the HTML document, which is ${lang}.`);
                     resolve(finalizeEvaluation(false, debugMessages));
                 }
             }).catch(err => {
@@ -866,7 +902,7 @@ function evaluateLanguageOfPage(headTitleElement) {
 
 function finalizeEvaluation(isVerified, debugMessages) {
     if (debugMessages.length > 0) {
-        console.log("DEBUG Criteria 3.1.1 Language of Page\n", debugMessages.join("\n"));
+        console.log("DEBUG Criterion 3.1.1 Language of Page\n", debugMessages.join("\n"));
     }
     return isVerified ? "verified" : "not verified";
 }
@@ -920,14 +956,15 @@ function evaluateLabelOrInstructions(inputs){
 
         // Se nessuna delle verifiche è passata, imposta isVerified su false e aggiungi un messaggio di debug
         if (!passed) {
-            debugMessages.push(`\tL'elemento ${input.tagName.toLowerCase()} non ha una label valida o un attributo aria-label/aria-labelledby che sia sufficientemente descrittivo.`);
+            // debugMessages.push(`\tL'elemento ${input.tagName.toLowerCase()} non ha una label valida o un attributo aria-label/aria-labelledby che sia sufficientemente descrittivo.`);
+            debugMessages.push(`\tThe ${input.tagName.toLowerCase()} element lacks a valid label or a sufficiently descriptive aria-label/aria-labelledby attribute.`);
             isVerified = false;
         }
     });
 
     // Stampa tutti i messaggi di debug in un'unica sezione
     if (debugMessages.length > 0) {
-        console.log("DEBUG Criteria 3.3.2\n", debugMessages.join("\n"));
+        console.log("DEBUG Criterion 3.3.2\n", debugMessages.join("\n"));
     }
 
     return isVerified;
@@ -976,12 +1013,13 @@ function evaluateNameRoleValue(nameRoleValueElements) {
         if (!hasName || !hasRole || !hasValue) {
             isVerified = false;
             // console.log(element)
-            debugMessages.push(`\tL'elemento ${element.tagName.toLowerCase()} non è stato configurato correttamente (name: ${hasName}, role: ${hasRole}, value: ${hasValue}).`);
+            // debugMessages.push(`\tL'elemento ${element.tagName.toLowerCase()} non è stato configurato correttamente (name: ${hasName}, role: ${hasRole}, value: ${hasValue}).`);
+            debugMessages.push(`\tThe ${element.tagName.toLowerCase()} element is not properly configured (name: ${hasName}, role: ${hasRole}, value: ${hasValue}).`);
         }
     });
 
     if (debugMessages.length > 0) {
-        console.log("DEBUG Criteria 4.1.2\n", debugMessages.join("\n"));
+        console.log("DEBUG Criterion 4.1.2\n", debugMessages.join("\n"));
     }
 
     return isVerified;
