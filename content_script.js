@@ -76,11 +76,14 @@ function selectElements() {
 
 // 1.1.1 //
 // Funzione per valutare il criterio di successo 1.1.1 Non-text Content
-function evaluateNonTextContent(nonTextElements) {
+function evaluateNonTextContent(nonTextElements, interactiveElements) {
     let passedChecks = 0;
 
+    // Uniamo i due array in un unico array allNonTextElements
+    const allNonTextElements = [...nonTextElements, ...interactiveElements];
+
     // Valuto ciascun elemento
-    nonTextElements.forEach(element => {
+    allNonTextElements.forEach(element => {
         if (element.tagName.toLowerCase() === 'img') {
             if (element.hasAttribute('alt') && element.getAttribute('alt').trim() !== "") {
                 passedChecks++;
@@ -134,11 +137,12 @@ function evaluateNonTextContent(nonTextElements) {
         }
     });
 
-    if(nonTextElements.length === 0){
+
+    if(allNonTextElements.length === 0){
         return true
     }else{
         // Calcolo la percentuale di successo
-        const successRate = (passedChecks / nonTextElements.length) * 100;
+        const successRate = (passedChecks / allNonTextElements.length) * 100;
         // Può essere true o false
         const limit = 90;
         if(successRate >= limit){
@@ -1012,7 +1016,7 @@ async function generateAccessibilityReport() {
     slicedSiteURL = siteURL.slice(0, 30) + "..."
 
     // results
-    result111 = evaluateNonTextContent(nonTextElements);
+    result111 = evaluateNonTextContent(nonTextElements, interactiveElements);
     result131 = evaluateInfoAndRelationships(headings,inputs,tables,lists,ariaElements);
     result132 = evaluateMeaningfulSequence("1.3.2",mainElements);
     result134 = evaluateOrientation(scripts);
