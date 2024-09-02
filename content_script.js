@@ -1000,7 +1000,7 @@ function evaluateNameRoleValue(nameRoleValueElements) {
         }
 
         // Verifica il "value"
-        if (element.tagName === 'A') {
+        if (element.tagName === 'A' || element.tagName === 'INPUT') {
             // Se è un tag <a> può contenere anche un immagine perciò lo poniamo verificato
             hasValue = true;
         } else {
