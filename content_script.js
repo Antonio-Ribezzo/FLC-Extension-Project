@@ -27,12 +27,16 @@ function selectElements() {
 
     // Popoliamo direttamente la symbolTable
     const allElements = Array.from(document.querySelectorAll('*'));
+    symbolTable.allBodyElements = document.querySelectorAll('body *')
 
     // Iteriamo attraverso gli elementi per popolare la symbolTable
     allElements.forEach(element => {
         const tagName = element.tagName.toLowerCase();
 
-        symbolTable.allBodyElements.push(element);
+        // symbolTable.allBodyElements.push(element);
+        // if (tagName !== 'html' && element.closest('head') === null) {
+        //     symbolTable.allBodyElements.push(element);
+        // }
 
         // Popolare varie categorie
         if (['img', 'input', 'area', 'object', 'embed', 'svg', 'audio', 'video'].includes(tagName) || 
@@ -586,11 +590,13 @@ function getContrastRatio(foreground, background) {
 
 function evaluateContrast(isEnhanced=false, bodyStyle, allBodyElements) {
     let backgroundColor = bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' ? bodyStyle.backgroundColor : 'rgb(255, 255, 255)';
-
+    // console.log(allBodyElements)
     // Trovo tutti gli elementi con la proprietà css 'color' all'interno del body
+    // La funzione filter scorre ogni elemento dell'array e verifica se soddisfa determinate condizioni. 
+    // In questo caso, l'obiettivo è trovare gli elementi che hanno una proprietà CSS color definita e visibile
     const colorElements = Array.from(allBodyElements).filter(element => {
         const style = window.getComputedStyle(element);
-        return style.color && style.color !== 'rgba(0, 0, 0, 0)';
+        return style.color && style.color !== 'rgba(0, 0, 0, 0)' && style.color !== 'inherit';
     });
 
     // Trovo il colore maggiormente presente
@@ -602,13 +608,15 @@ function evaluateContrast(isEnhanced=false, bodyStyle, allBodyElements) {
         }
         colorFrequency[color]++;
     });
-
+    // console.log(colorFrequency)
     const sortedColors = Object.keys(colorFrequency).sort((a, b) => colorFrequency[b] - colorFrequency[a]);
     const mostFrequentColor = sortedColors[0];
+    // console.log(mostFrequentColor)
     // const secondMostFrequentColor = sortedColors[1];
 
     // Calcolo il contrasto tra il background color e i colori maggiormente presenti
     const contrastRatio1 = getContrastRatio(mostFrequentColor, backgroundColor);
+    // console.log(contrastRatio1)
     // const contrastRatio2 = secondMostFrequentColor ? getContrastRatio(secondMostFrequentColor, backgroundColor) : null;
 
     // Determino se il contrasto è sufficiente 
@@ -618,19 +626,19 @@ function evaluateContrast(isEnhanced=false, bodyStyle, allBodyElements) {
 
     // Soglie di contrasto basate sull'opzione isEnhanced
     const minContrast = isLargeText ? (isEnhanced ? 4.5 : 3) : (isEnhanced ? 7 : 4.5);
-
     const isVerified1 = contrastRatio1 >= minContrast;
+    // console.log(isVerified1)
     // const isVerified2 = contrastRatio2 !== null ? contrastRatio2 >= minContrast : true;
 
     // console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
     // console.log(`Second most frequent text-color: ${secondMostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio2}`);
-    if(!isEnhanced){
+    if(isEnhanced == false){
         if(isVerified1){
             // console.log(`Most frequent text-color: ${mostFrequentColor}, Background color: ${backgroundColor}, Contrast ratio: ${contrastRatio1}`);
             return true
         }else{
             // console.log(`DEBUG Criterion 1.4.3 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
-            console.log(`DEBUG Criterion 1.4.3 \n\tThe most frequently used text color (${mostFrequentColor}) and the second most used color (${secondMostFrequentColor}) do not provide adequate contrast with the background color (${backgroundColor}). There may be exceptions.`);
+            console.log(`DEBUG Criterion 1.4.3 \n\tThe most frequently used text color (${mostFrequentColor}) do not provide adequate contrast with the background color (${backgroundColor}). There may be exceptions.`);
             return false
         }
     }else{
@@ -639,7 +647,7 @@ function evaluateContrast(isEnhanced=false, bodyStyle, allBodyElements) {
             return true
         }else{
             // console.log(`DEBUG Criterion 1.4.6 \n\tIl colore maggiormente utilizzato per i testi (${mostFrequentColor}) e il secondo maggiormente utilizzato (${secondMostFrequentColor}) non contrastano adeguatamente con il colore del background (${backgroundColor}). Ci possono comunque essere delle eccezioni.`)
-            console.log(`DEBUG Criterion 1.4.6 \n\tThe most frequently used text color (${mostFrequentColor}) and the second most used color (${secondMostFrequentColor}) do not provide adequate contrast with the background color (${backgroundColor}). There may be exceptions.`);
+            console.log(`DEBUG Criterion 1.4.6 \n\tThe most frequently used text color (${mostFrequentColor}) do not provide adequate contrast with the background color (${backgroundColor}). There may be exceptions.`);
             return false
         }
     }
