@@ -551,10 +551,13 @@ function evaluateAudioControl(mediaElements) {
             const hasControls = element.hasAttribute('controls');
             const hasPauseStop = element.querySelector('button[aria-label="pause"], button[aria-label="stop"]');
             const hasVolumeControl = element.querySelector('input[type="range"][aria-label="volume"]');
+            const pauseStopInDocument = document.querySelector('button[aria-label="pause"], button[aria-label="stop"], button#play-pause');
+            const volumeControlInDocument = document.querySelector('input[type="range"][aria-label="volume"], button#mute');
 
-            if (!hasControls && (!hasPauseStop || !hasVolumeControl)) {
-                //console.log(`DEBUG Criterion 1.3.6 \n\tL'elemento multimediale <${element.tagName.toLowerCase()}> non ha controlli per l'audio o per il video.`);
-                console.log(`DEBUG Criterion 1.3.6 \n\tThe multimedia element <${element.tagName.toLowerCase()}> does not have audio nor video controls.`);
+
+            if (!hasControls && (!hasPauseStop || !hasVolumeControl) && (!pauseStopInDocument || !volumeControlInDocument)) {
+                //console.log(`DEBUG Criterion 1.4.2 \n\tL'elemento multimediale <${element.tagName.toLowerCase()}> non ha controlli per l'audio o per il video.`);
+                console.log(`DEBUG Criterion 1.4.2 \n\tThe multimedia element <${element.tagName.toLowerCase()}> does not have proper controls for audio or video.`);
                 isVerified = false;
             }
         }
