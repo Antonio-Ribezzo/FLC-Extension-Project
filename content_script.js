@@ -65,7 +65,7 @@ function selectElements() {
         if (!['noscript', 'script', 'style', 'link', 'svg', 'g', 'path', 'img', 'figure'].includes(tagName)) {
             symbolTable.textElements.push(element);
         }
-        if (tagName === 'a') symbolTable.allLinks.push(element);
+        if (tagName === 'a' || element.getAttribute('role') === 'link') symbolTable.allLinks.push(element);
     });
 
     symbolTable.bodyStyle = window.getComputedStyle(document.body);
@@ -553,8 +553,8 @@ function evaluateAudioControl(mediaElements) {
             const hasVolumeControl = element.querySelector('input[type="range"][aria-label="volume"]');
 
             if (!hasControls && (!hasPauseStop || !hasVolumeControl)) {
-                //console.log(`DEBUG Criterion 1.4.2 \n\tL'elemento multimediale <${element.tagName.toLowerCase()}> non ha controlli appropriati per l'audio o per il video.`);
-                console.log(`DEBUG Criterion 1.4.2 \n\tThe multimedia element <${element.tagName.toLowerCase()}> does not have proper controls for audio or video.`);
+                //console.log(`DEBUG Criterion 1.3.6 \n\tL'elemento multimediale <${element.tagName.toLowerCase()}> non ha controlli per l'audio o per il video.`);
+                console.log(`DEBUG Criterion 1.3.6 \n\tThe multimedia element <${element.tagName.toLowerCase()}> does not have audio nor video controls.`);
                 isVerified = false;
             }
         }
