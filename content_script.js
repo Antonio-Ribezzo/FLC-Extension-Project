@@ -656,39 +656,56 @@ function evaluateContrast(isEnhanced=false, bodyStyle, allBodyElements) {
 // 1.4.10 //
 // Funzione per verificare il criterio di successo 1.4.10 Reflow
 function checkReflow(bodyStyle, allBodyElements) {
+    let isLayoutVerified = false;
+    let isViewportVerified = false;
     let isVerified = false;
 
-    // Verifica se Flexbox è utilizzato
+    // Check if Flexbox is used
     if (bodyStyle.display.includes('flex')) {
-        // console.log('La pagina utilizza Flexbox.');
-        isVerified = true;
+        // console.log('The page uses Flexbox.');
+        isLayoutVerified = true;
     }
 
-    // Verifica se CSS Grid è utilizzato
+    // Check if CSS Grid is used
     if (bodyStyle.display.includes('grid')) {
-        // console.log('La pagina utilizza CSS Grid.');
-        isVerified = true;
+        // console.log('The page uses CSS Grid.');
+        isLayoutVerified = true;
     }
 
-    // In alternativa, cerca Flexbox o Grid all'interno di qualsiasi elemento nella pagina
-    if (!isVerified) {
+    // Alternatively, look for Flexbox or Grid within any element on the page
+    if (!isLayoutVerified) {
         allBodyElements.forEach(element => {
             const style = window.getComputedStyle(element);
             if (style.display.includes('flex') || style.display.includes('grid')) {
-                // console.log(`L'elemento ${element.tagName.toLowerCase()} utilizza ${style.display.includes('flex') ? 'Flexbox' : 'CSS Grid'}.`);
-                isVerified = true;
+                // console.log(`The ${element.tagName.toLowerCase()} element uses ${style.display.includes('flex') ? 'Flexbox' : 'CSS Grid'}.`);
+                isLayoutVerified = true;
             }
         });
     }
 
-    if(!isVerified){
-       //console.log(`DEBUG Criterion 1.4.10 \n\tLa pagina non utilizza né Flexbox nè Grid per adattare il layout alle varie viewport.`)
-        console.log(`DEBUG Criterion 1.4.10 \n\tThe page does not use either Flexbox or Grid to adapt the layout to different viewports.`);
-        return false
-    }else{
-        // console.log('La pagina utilizza Flexbox o Grid per adattare il layout alle varie viewport')
-        return true
+    // Check if the meta viewport tag allows zooming
+    const metaViewport = document.querySelector('meta[name="viewport"]');
+    if (metaViewport) {
+        const content = metaViewport.getAttribute('content');
+        if (content && !content.includes('user-scalable=no') && !content.includes('maximum-scale=1')) {
+            isViewportVerified = true;
+            // console.log('The meta viewport tag allows zooming.');
+        }
     }
+
+    // Update isVerified to true if at least one condition is met
+    if (isLayoutVerified || isViewportVerified) {
+        isVerified = true;
+    } else {
+        if (!isLayoutVerified) {
+            console.log(`DEBUG Criterion 1.4.10 \n\tThe page does not use either Flexbox or Grid to adapt the layout to different viewports.`);
+        }
+        if (!isViewportVerified) {
+            console.log(`DEBUG Criterion 1.4.10 \n\tThe meta viewport tag restricts zooming, which violates the reflow criterion.`);
+        }
+    }
+
+    return isVerified;
 }
 
 // 1.4.11
