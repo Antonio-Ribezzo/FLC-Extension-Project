@@ -743,7 +743,7 @@ function evaluateNonTextContrast(graphicalNonTextElements) {
         if (contrastRatio && contrastRatio < 3) {
             // console.log(`DEBUG Criterion 1.4.11 \n\tL'elemento ${element.tagName.toLowerCase()} riportato sotto non rispetta il contrasto minimo: ${contrastRatio.toFixed(2)}:1.`);
             console.log(`DEBUG Criterion 1.4.11 \n\tThe ${element.tagName.toLowerCase()} element shown below does not meet the minimum contrast ratio: ${contrastRatio.toFixed(2)}:1.`);
-            console.log(element, backgroundColor, elementColor, borderColor, contrastRatio)
+            // console.log(element, backgroundColor, elementColor, borderColor, contrastRatio)
             isVerified = false;
         }
     });
